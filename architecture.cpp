@@ -230,15 +230,18 @@ class CachedFooImpl
 /* CLASS Foo ******************************************************************/
 
 // Forward declaration
+template<typename T>
 class Foo;
 
 // Alias
-using FooPtr = std::shared_ptr<Foo>;
+template<typename T>
+using FooPtr = std::shared_ptr<Foo<T>>;
 
 /**
- * @class Foo
- * Main class for Foo front-end
+ * @class Foo<T>
+ * Main class for Foo<T> front-end
  */
+template<typename T>
 class Foo {
  public:
   Foo(FooImplPtr impl) : _impl(std::move(impl)) {}
@@ -258,6 +261,11 @@ class Foo {
  -------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 */
+
+/* CLASS Target ***************************************************************/
+
+class Target {
+};
 
 /* CLASS Top ******************************************************************/
 
@@ -311,8 +319,8 @@ class Bar : public Top {
   using base = Top;
 
   // Purely virtual methods
-  virtual FooPtr simpleFoo() = 0;
-  virtual FooPtr cachedFoo() = 0;
+  virtual FooPtr<Target> simpleFoo() = 0;
+  virtual FooPtr<Target> cachedFoo() = 0;
 
   // Virtual methods
   virtual void simpleMethod(SimpleFooImplPtr<Bar> simpleFoo) {
@@ -346,13 +354,13 @@ class BarCrtp : public Bar {
   using DerivedPtr = std::shared_ptr<Derived>;
 
   // Overriding methods
-  FooPtr simpleFoo() override {
-    return std::make_shared<Foo>(
+  FooPtr<Target> simpleFoo() override {
+    return std::make_shared<Foo<Target>>(
       std::make_shared<SimpleFooImpl<Derived>>(make_shared()));
   }
 
-  FooPtr cachedFoo() override {
-    return std::make_shared<Foo>(
+  FooPtr<Target> cachedFoo() override {
+    return std::make_shared<Foo<Target>>(
       std::make_shared<CachedFooImpl<Derived>>(make_shared()));
   }
 
