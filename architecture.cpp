@@ -19,6 +19,7 @@
 // Standard headers
 #include <memory>
 #include <iostream>
+#include <typeinfo>
 #include <type_traits>
 
 /*
@@ -187,10 +188,11 @@ class CachedFooImpl
  public:
   // Alias
   using TPtr = std::shared_ptr<T>;
+  using Cache = typename T::Cache;
 
   // Constructor
-  CachedFooImpl(TPtr t = TPtr())
-      : _t(std::move(t)) {
+  CachedFooImpl(TPtr t = TPtr(), Cache cache = Cache())
+      : _t(std::move(t)), _cache(std::move(cache)) {
   }
 
   // Overriden methods
@@ -199,14 +201,14 @@ class CachedFooImpl
   }
 
   // Concrete methods
-  int cache() {
+  Cache cache() {
     return _cache;
   }
 
  private:
   // Instance variables
   TPtr _t;
-  int _cache = 0;
+  Cache _cache;
 
   // Concrete methods
   template<typename U = T>
@@ -272,6 +274,7 @@ using TopPtr = std::shared_ptr<Top>;
 class Top : public std::enable_shared_from_this<Top> {
  public:
   using base = void;
+  using Cache = int;
 };
 
 /* CLASS Baz ******************************************************************/
@@ -301,13 +304,13 @@ using BarPtr = std::shared_ptr<Bar>;
 
 /**
  * @class Bar
- * Complex son of Top, with new frontend
+ * Complex son of Top, with definition of new front-end
  */
 class Bar : public Top {
  public:
   using base = Top;
 
-  // Overriding methods
+  // Purely virtual methods
   virtual FooPtr simpleFoo() = 0;
   virtual FooPtr cachedFoo() = 0;
 
@@ -318,7 +321,45 @@ class Bar : public Top {
 
   virtual void cachedMethod(CachedFooImplPtr<Bar> cachedFoo) {
     std::cout << "Running cached in Bar" << std::endl;
-    cachedFoo->cache();
+    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+  }
+};
+
+/* CLASS BarCrtp **************************************************************/
+
+// Forward declaration
+template<typename Derived>
+class BarCrtp;
+
+// Alias
+template<typename Derived>
+using BarCrtpPtr = std::shared_ptr<BarCrtp<Derived>>;
+
+/**
+ * @class BarCrtp
+ * Implementation of front-end, using CRTP to inject methods in subclasses
+ */
+template<typename Derived>
+class BarCrtp : public Bar {
+ public:
+  using base = Bar;
+  using DerivedPtr = std::shared_ptr<Derived>;
+
+  // Overriding methods
+  FooPtr simpleFoo() override {
+    return std::make_shared<Foo>(
+      std::make_shared<SimpleFooImpl<Derived>>(make_shared()));
+  }
+
+  FooPtr cachedFoo() override {
+    return std::make_shared<Foo>(
+      std::make_shared<CachedFooImpl<Derived>>(make_shared()));
+  }
+
+ private:
+  DerivedPtr make_shared() {
+    return std::static_pointer_cast<Derived>(
+      static_cast<Derived *>(this)->shared_from_this());
   }
 };
 
@@ -334,20 +375,10 @@ using BarDerivedPtr = std::shared_ptr<BarDerived>;
  * @class BarDerived
  * Class "overriding" parent implementation
  */
-class BarDerived : public Bar {
+class BarDerived : public BarCrtp<BarDerived> {
  public:
   using base = Bar;
-
-  // Overriden methods
-  FooPtr simpleFoo() override {
-    return std::make_shared<Foo>(
-      std::make_shared<SimpleFooImpl<BarDerived>>(make_shared()));
-  }
-
-  FooPtr cachedFoo() override {
-    return std::make_shared<Foo>(
-      std::make_shared<CachedFooImpl<BarDerived>>(make_shared()));
-  }
+  using Cache = double;
 
   virtual void simpleMethod(SimpleFooImplPtr<BarDerived> simpleFoo) {
     std::cout << "Running simple in BarDerived" << std::endl;
@@ -355,12 +386,7 @@ class BarDerived : public Bar {
 
   virtual void cachedMethod(CachedFooImplPtr<BarDerived> cachedFoo) {
     std::cout << "Running cached in BarDerived" << std::endl;
-    cachedFoo->cache();
-  }
-
- private:
-  BarDerivedPtr make_shared() {
-    return std::static_pointer_cast<BarDerived>(this->shared_from_this());
+    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
   }
 };
 
@@ -376,25 +402,9 @@ using BarReusingPtr = std::shared_ptr<BarReusing>;
  * @class BarReusing
  * Class reusing parent implementation
  */
-class BarReusing : public Bar {
+class BarReusing : public BarCrtp<BarReusing> {
  public:
   using base = Bar;
-
-  // Overriden methods
-  FooPtr simpleFoo() override {
-    return std::make_shared<Foo>(
-      std::make_shared<SimpleFooImpl<BarReusing>>(make_shared()));
-  }
-
-  FooPtr cachedFoo() override {
-    return std::make_shared<Foo>(
-      std::make_shared<CachedFooImpl<BarReusing>>(make_shared()));
-  }
-
- private:
-  BarReusingPtr make_shared() {
-    return std::static_pointer_cast<BarReusing>(this->shared_from_this());
-  }
 };
 
 /*
