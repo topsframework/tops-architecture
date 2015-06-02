@@ -311,13 +311,12 @@ class Bar : public Top {
   virtual FooPtr simpleFoo() = 0;
   virtual FooPtr cachedFoo() = 0;
 
- protected:
   // Virtual methods
-  virtual void simpleMethodImpl(SimpleFooImpl<Bar> *simpleFoo) {
+  virtual void simpleMethod(SimpleFooImplPtr<Bar> simpleFoo) {
     std::cout << "Running simple in Bar" << std::endl;
   }
 
-  virtual void cachedMethodImpl(CachedFooImpl<Bar> *cachedFoo) {
+  virtual void cachedMethod(CachedFooImplPtr<Bar> cachedFoo) {
     std::cout << "Running cached in Bar" << std::endl;
     cachedFoo->cache();
   }
@@ -350,26 +349,11 @@ class BarDerived : public Bar {
       std::make_shared<CachedFooImpl<BarDerived>>(make_shared()));
   }
 
-  // Concrete methods
-  template<typename... Params> // Required to implement `simpleFoo()`
-  void simpleMethod(SimpleFooImplPtr<BarDerived> simpleFoo, Params... params) {
-    std::cout << "BarDerived template method" << std::endl;
-    simpleMethodImpl(simpleFoo.get(), std::forward<Params>(params)...);
-  }
-
-  template<typename... Params> // Required to implement `cachedFoo()`
-  void cachedMethod(CachedFooImplPtr<BarDerived> cachedFoo, Params... params) {
-    std::cout << "BarDerived template method" << std::endl;
-    cachedMethodImpl(cachedFoo.get(), std::forward<Params>(params)...);
-  }
-
- protected:
-  // Virtual methods
-  virtual void simpleMethodImpl(SimpleFooImpl<BarDerived> *simpleFoo) {
+  virtual void simpleMethod(SimpleFooImplPtr<BarDerived> simpleFoo) {
     std::cout << "Running simple in BarDerived" << std::endl;
   }
 
-  virtual void cachedMethodImpl(CachedFooImpl<BarDerived> *cachedFoo) {
+  virtual void cachedMethod(CachedFooImplPtr<BarDerived> cachedFoo) {
     std::cout << "Running cached in BarDerived" << std::endl;
     cachedFoo->cache();
   }
@@ -405,19 +389,6 @@ class BarReusing : public Bar {
   FooPtr cachedFoo() override {
     return std::make_shared<Foo>(
       std::make_shared<CachedFooImpl<BarReusing>>(make_shared()));
-  }
-
-  // Concrete methods
-  template<typename... Params> // Required to implement `simpleFoo()`
-  void simpleMethod(SimpleFooImplPtr<BarReusing> simpleFoo, Params... params) {
-    std::cout << "BarReusing template method" << std::endl;
-    simpleMethodImpl(simpleFoo.get(), std::forward<Params>(params)...);
-  }
-
-  template<typename... Params> // Required to implement `simpleFoo()`
-  void cachedMethod(CachedFooImplPtr<BarReusing> cachedFoo, Params... params) {
-    std::cout << "BarReusing template method" << std::endl;
-    cachedMethodImpl(cachedFoo.get(), std::forward<Params>(params)...);
   }
 
  private:
