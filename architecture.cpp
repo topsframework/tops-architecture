@@ -156,7 +156,7 @@ class SimpleFooImpl
   }
 
   void methodImpl(has_simpleMethod_tag) {
-    _t->simpleMethod(std::shared_ptr<SimpleFooImpl<T>>(make_shared()));
+    _t->simpleMethod(make_shared());
   }
 
   SimpleFooImplPtr<T> make_shared() {
@@ -213,7 +213,7 @@ class CachedFooImpl
   }
 
   void methodImpl(has_simpleMethod_tag) {
-    _t->cachedMethod(std::shared_ptr<CachedFooImpl<T>>(make_shared()));
+    _t->cachedMethod(make_shared());
   }
 
   CachedFooImplPtr<T> make_shared() {
