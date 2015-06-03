@@ -70,15 +70,15 @@ public:                                                                     \
       = sizeof(test<Derived>(nullptr)) == sizeof(Yes);                      \
 };                                                                          \
                                                                             \
+struct no_##member##_tag {};                                                \
+struct has_##member##_tag {};                                               \
+                                                                            \
 template<typename T>                                                        \
 struct has_member_##member                                                  \
     : public std::integral_constant<bool, HasMember_##member<T>::RESULT> {  \
                                                                             \
-  struct true_tag{};                                                        \
-  struct false_tag{};                                                       \
-                                                                            \
   using tag = typename std::conditional<has_member_simpleMethod<T>::value,  \
-                true_tag, false_tag>::type;                                 \
+                has_##member##_tag, no_##member##_tag>::type;               \
 };
 
 
@@ -150,11 +150,12 @@ class SimpleFooImpl
   // Instance variables
   TPtr _t;
 
-  void methodImpl(typename has_member_simpleMethod<T>::false_tag) {
+  // Concrete methods
+  void methodImpl(no_simpleMethod_tag) {
     throw std::logic_error("Class don't have method!");
   }
 
-  void methodImpl(typename has_member_simpleMethod<T>::true_tag) {
+  void methodImpl(has_simpleMethod_tag) {
     _t->simpleMethod(std::shared_ptr<SimpleFooImpl<T>>(make_shared()));
   }
 
@@ -207,11 +208,11 @@ class CachedFooImpl
   Cache _cache;
 
   // Concrete methods
-  void methodImpl(typename has_member_simpleMethod<T>::false_tag) {
+  void methodImpl(no_simpleMethod_tag) {
     throw std::logic_error("Class don't have method!");
   }
 
-  void methodImpl(typename has_member_simpleMethod<T>::true_tag) {
+  void methodImpl(has_simpleMethod_tag) {
     _t->cachedMethod(std::shared_ptr<CachedFooImpl<T>>(make_shared()));
   }
 
