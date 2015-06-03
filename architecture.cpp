@@ -20,6 +20,7 @@
 #include <memory>
 #include <iostream>
 #include <typeinfo>
+#include <exception>
 #include <type_traits>
 
 /*
@@ -150,8 +151,7 @@ class SimpleFooImpl
   TPtr _t;
 
   void methodImpl(typename has_member_simpleMethod<T>::false_tag) {
-    std::cout << "Doing nothing... (don't have method or not constructible)";
-    std::cout << std::endl;
+    throw std::logic_error("Class don't have method!");
   }
 
   void methodImpl(typename has_member_simpleMethod<T>::true_tag) {
@@ -208,8 +208,7 @@ class CachedFooImpl
 
   // Concrete methods
   void methodImpl(typename has_member_simpleMethod<T>::false_tag) {
-    std::cout << "Doing nothing... (don't have method or not constructible)";
-    std::cout << std::endl;
+    throw std::logic_error("Class don't have method!");
   }
 
   void methodImpl(typename has_member_simpleMethod<T>::true_tag) {
