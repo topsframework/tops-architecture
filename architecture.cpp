@@ -72,17 +72,14 @@ public:                                                                     \
 template<typename T>                                                        \
 struct has_member_##member                                                  \
     : public std::integral_constant<bool, HasMember_##member<T>::RESULT> {  \
-};                                                                          \
                                                                             \
-template<typename Model>                                                    \
-using has_##member = typename                                               \
-  std::enable_if<has_member_##member<Model>::value                          \
-                 && std::is_constructible<Model>::value, bool>::type;       \
+  struct true_tag{};                                                        \
+  struct false_tag{};                                                       \
                                                                             \
-template<typename Model>                                                    \
-using no_##member = typename                                                \
-  std::enable_if<!has_member_##member<Model>::value                         \
-                 || !std::is_constructible<Model>::value, bool>::type;
+  using tag = typename std::conditional<has_member_simpleMethod<T>::value,  \
+                true_tag, false_tag>::type;                                 \
+};
+
 
 // Generate the above structure for the following list of methods:
 GENERATE_HAS_MEMBER(simpleMethod)
@@ -141,25 +138,24 @@ class SimpleFooImpl
       : _t(std::move(t)) {
   }
 
+ public:
+
   // Overriden methods
   void method() override {
-    methodImpl();
+    methodImpl(typename has_member_simpleMethod<T>::tag());
   }
 
  private:
   // Instance variables
   TPtr _t;
 
-  // Concrete methods
-  template<typename U = T>
-  void methodImpl(no_simpleMethod<U>* dummy = nullptr) {
+  void methodImpl(typename has_member_simpleMethod<T>::false_tag) {
     std::cout << "Doing nothing... (don't have method or not constructible)";
     std::cout << std::endl;
   }
 
-  template<typename U = T>
-  void methodImpl(has_simpleMethod<U>* dummy = nullptr) {
-    _t->simpleMethod(std::shared_ptr<SimpleFooImpl<U>>(make_shared()));
+  void methodImpl(typename has_member_simpleMethod<T>::true_tag) {
+    _t->simpleMethod(std::shared_ptr<SimpleFooImpl<T>>(make_shared()));
   }
 
   SimpleFooImplPtr<T> make_shared() {
@@ -197,7 +193,7 @@ class CachedFooImpl
 
   // Overriden methods
   void method() override {
-    methodImpl();
+    methodImpl(typename has_member_simpleMethod<T>::tag());
   }
 
   // Concrete methods
@@ -211,15 +207,13 @@ class CachedFooImpl
   Cache _cache;
 
   // Concrete methods
-  template<typename U = T>
-  void methodImpl(no_cachedMethod<U>* dummy = nullptr) {
+  void methodImpl(typename has_member_simpleMethod<T>::false_tag) {
     std::cout << "Doing nothing... (don't have method or not constructible)";
     std::cout << std::endl;
   }
 
-  template<typename U = T>
-  void methodImpl(has_cachedMethod<U>* dummy = nullptr) {
-    _t->cachedMethod(std::shared_ptr<CachedFooImpl<U>>(make_shared()));
+  void methodImpl(typename has_member_simpleMethod<T>::true_tag) {
+    _t->cachedMethod(std::shared_ptr<CachedFooImpl<T>>(make_shared()));
   }
 
   CachedFooImplPtr<T> make_shared() {
