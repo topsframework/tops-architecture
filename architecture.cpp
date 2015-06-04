@@ -196,7 +196,7 @@ class CachedFoo
 
   // Overriden methods
   void method() override {
-    methodImpl(typename has_member_simpleMethod<M>::tag());
+    methodImpl(typename has_member_cachedMethod<M>::tag());
   }
 
   // Concrete methods
@@ -210,11 +210,11 @@ class CachedFoo
   Cache _cache;
 
   // Concrete methods
-  void methodImpl(no_simpleMethod_tag) {
+  void methodImpl(no_cachedMethod_tag) {
     throw std::logic_error("Class don't have method!");
   }
 
-  void methodImpl(has_simpleMethod_tag) {
+  void methodImpl(has_cachedMethod_tag) {
     _m->template cachedMethod<T>(make_shared());
   }
 
