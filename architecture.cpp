@@ -138,8 +138,8 @@ class SimpleFooImpl
   using MPtr = std::shared_ptr<M>;
 
   // Constructor
-  SimpleFooImpl(MPtr t = MPtr())
-      : _t(std::move(t)) {
+  SimpleFooImpl(MPtr m = MPtr())
+      : _m(std::move(m)) {
   }
 
  public:
@@ -151,7 +151,7 @@ class SimpleFooImpl
 
  private:
   // Instance variables
-  MPtr _t;
+  MPtr _m;
 
   // Concrete methods
   void methodImpl(no_simpleMethod_tag) {
@@ -159,7 +159,7 @@ class SimpleFooImpl
   }
 
   void methodImpl(has_simpleMethod_tag) {
-    _t->simpleMethod(make_shared());
+    _m->simpleMethod(make_shared());
   }
 
   SimpleFooImplPtr<T, M> make_shared() {
@@ -192,8 +192,8 @@ class CachedFooImpl
   using Cache = typename M::Cache;
 
   // Constructor
-  CachedFooImpl(MPtr t = MPtr(), Cache cache = Cache())
-      : _t(std::move(t)), _cache(std::move(cache)) {
+  CachedFooImpl(MPtr m = MPtr(), Cache cache = Cache())
+      : _m(std::move(m)), _cache(std::move(cache)) {
   }
 
   // Overriden methods
@@ -208,7 +208,7 @@ class CachedFooImpl
 
  private:
   // Instance variables
-  MPtr _t;
+  MPtr _m;
   Cache _cache;
 
   // Concrete methods
@@ -217,7 +217,7 @@ class CachedFooImpl
   }
 
   void methodImpl(has_simpleMethod_tag) {
-    _t->cachedMethod(make_shared());
+    _m->cachedMethod(make_shared());
   }
 
   CachedFooImplPtr<T, M> make_shared() {
