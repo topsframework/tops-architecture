@@ -296,25 +296,6 @@ class Bar : public Top {
   // Purely virtual methods
   virtual FooPtr<Target> targetFoo(bool cached) = 0;
   virtual FooPtr<Spot> spotFoo(bool cached) = 0;
-
-  // Concrete methods
-  void simpleMethod(SimpleFooPtr<Target, Bar> simpleFoo) {
-    std::cout << "Running simple for Target in Bar" << std::endl;
-  }
-
-  void cachedMethod(CachedFooPtr<Target, Bar> cachedFoo) {
-    std::cout << "Running cached for Target in Bar" << std::endl;
-    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
-  }
-
-  void simpleMethod(SimpleFooPtr<Spot, Bar> simpleFoo) {
-    std::cout << "Running simple for Spot in Bar" << std::endl;
-  }
-
-  void cachedMethod(CachedFooPtr<Spot, Bar> cachedFoo) {
-    std::cout << "Running cached for Spot in Bar" << std::endl;
-    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
-  }
 };
 
 /* CLASS BarCrtp **************************************************************/
@@ -350,6 +331,25 @@ class BarCrtp : public Bar {
     return std::make_shared<SimpleFoo<Spot, Derived>>(make_shared());
   }
 
+  // Virtual methods
+  virtual void simpleMethod(SimpleFooPtr<Target, Derived> simpleFoo) {
+    std::cout << "Running simple for Target in BarCrtp" << std::endl;
+  }
+
+  virtual void cachedMethod(CachedFooPtr<Target, Derived> cachedFoo) {
+    std::cout << "Running cached for Target in BarCrtp" << std::endl;
+    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+  }
+
+  virtual void simpleMethod(SimpleFooPtr<Spot, Derived> simpleFoo) {
+    std::cout << "Running simple for Spot in BarCrtp" << std::endl;
+  }
+
+  virtual void cachedMethod(CachedFooPtr<Spot, Derived> cachedFoo) {
+    std::cout << "Running cached for Spot in BarCrtp" << std::endl;
+    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+  }
+
  private:
   DerivedPtr make_shared() {
     return std::static_pointer_cast<Derived>(
@@ -374,21 +374,21 @@ class BarDerived : public BarCrtp<BarDerived> {
   using base = Bar;
   using Cache = double;
 
-  // Concrete methods
-  void simpleMethod(SimpleFooPtr<Target, BarDerived> simpleFoo) {
+  // Overriden methods
+  void simpleMethod(SimpleFooPtr<Target, BarDerived> simpleFoo) override {
     std::cout << "Running simple for Target in BarDerived" << std::endl;
   }
 
-  void cachedMethod(CachedFooPtr<Target, BarDerived> cachedFoo) {
+  void cachedMethod(CachedFooPtr<Target, BarDerived> cachedFoo) override {
     std::cout << "Running cached for Target in BarDerived" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
   }
 
-  void simpleMethod(SimpleFooPtr<Spot, BarDerived> simpleFoo) {
+  void simpleMethod(SimpleFooPtr<Spot, BarDerived> simpleFoo) override {
     std::cout << "Running simple for Spot in BarDerived" << std::endl;
   }
 
-  void cachedMethod(CachedFooPtr<Spot, BarDerived> cachedFoo) {
+  void cachedMethod(CachedFooPtr<Spot, BarDerived> cachedFoo) override {
     std::cout << "Running cached for Spot in BarDerived" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
   }
