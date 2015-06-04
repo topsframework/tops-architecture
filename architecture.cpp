@@ -77,7 +77,7 @@ template<typename T>                                                        \
 struct has_member_##member                                                  \
     : public std::integral_constant<bool, HasMember_##member<T>::RESULT> {  \
                                                                             \
-  using tag = typename std::conditional<has_member_simpleMethod<T>::value,  \
+  using tag = typename std::conditional<has_member_##member<T>::value,      \
                 has_##member##_tag, no_##member##_tag>::type;               \
 };
 
