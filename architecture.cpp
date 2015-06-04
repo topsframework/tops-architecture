@@ -336,12 +336,12 @@ class Bar : public Top {
 
 template<>
 void Bar::simpleMethod<Target>(SimpleFooImplPtr<Target, Bar> simpleFoo) {
-  std::cout << "Running simple in Bar" << std::endl;
+  std::cout << "Running simple for Target in Bar" << std::endl;
 }
 
 template<>
 void Bar::cachedMethod<Target>(CachedFooImplPtr<Target, Bar> cachedFoo) {
-  std::cout << "Running cached in Bar" << std::endl;
+  std::cout << "Running cached for Target in Bar" << std::endl;
   std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
 }
 
@@ -411,13 +411,13 @@ class BarDerived : public BarCrtp<BarDerived> {
 template<>
 void BarDerived::simpleMethod<Target>(
     SimpleFooImplPtr<Target, BarDerived> simpleFoo) {
-  std::cout << "Running simple in BarDerived" << std::endl;
+  std::cout << "Running simple for Target in BarDerived" << std::endl;
 }
 
 template<>
 void BarDerived::cachedMethod<Target>(
     CachedFooImplPtr<Target, BarDerived> cachedFoo) {
-  std::cout << "Running cached in BarDerived" << std::endl;
+  std::cout << "Running cached for Target in BarDerived" << std::endl;
   std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
 }
 
