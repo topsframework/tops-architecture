@@ -97,16 +97,19 @@ GENERATE_HAS_MEMBER(cachedMethod)
 /* CLASS FooImpl **************************************************************/
 
 // Forward declaration
+template<typename T>
 class FooImpl;
 
 // Alias
-using FooImplPtr = std::shared_ptr<FooImpl>;
+template<typename T>
+using FooImplPtr = std::shared_ptr<FooImpl<T>>;
 
 /**
  * @class FooImpl
  * Interface for implementation of Foo front-end
  */
-class FooImpl : public std::enable_shared_from_this<FooImpl> {
+template<typename T>
+class FooImpl : public std::enable_shared_from_this<FooImpl<T>> {
  public:
   // Virtual methods
   virtual void method() = 0;
@@ -115,21 +118,21 @@ class FooImpl : public std::enable_shared_from_this<FooImpl> {
 /* CLASS SimpleFooImpl ********************************************************/
 
 // Forward declaration
-template<typename M>
+template<typename T, typename M>
 class SimpleFooImpl;
 
 // Alias
-template<typename M>
-using SimpleFooImplPtr = std::shared_ptr<SimpleFooImpl<M>>;
+template<typename T, typename M>
+using SimpleFooImplPtr = std::shared_ptr<SimpleFooImpl<T, M>>;
 
 /**
  * @class SimpleFooImpl
  * Simple implementation of Foo front-end
  */
-template<typename M>
+template<typename T, typename M>
 class SimpleFooImpl
     : public std::conditional<!std::is_void<typename M::base>::value,
-               SimpleFooImpl<typename M::base>, FooImpl>::type {
+               SimpleFooImpl<T, typename M::base>, FooImpl<T>>::type {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
@@ -159,29 +162,30 @@ class SimpleFooImpl
     _t->simpleMethod(make_shared());
   }
 
-  SimpleFooImplPtr<M> make_shared() {
-    return std::static_pointer_cast<SimpleFooImpl<M>>(this->shared_from_this());
+  SimpleFooImplPtr<T, M> make_shared() {
+    return std::static_pointer_cast<SimpleFooImpl<T, M>>(
+      this->shared_from_this());
   }
 };
 
 /* CLASS CachedFooImpl ********************************************************/
 
 // Forward declaration
-template<typename M>
+template<typename T, typename M>
 class CachedFooImpl;
 
 // Alias
-template<typename M>
-using CachedFooImplPtr = std::shared_ptr<CachedFooImpl<M>>;
+template<typename T, typename M>
+using CachedFooImplPtr = std::shared_ptr<CachedFooImpl<T, M>>;
 
 /**
  * @class CachedFooImpl
  * Cached implementation of Foo front-end
  */
-template<typename M>
+template<typename T, typename M>
 class CachedFooImpl
     : public std::conditional<!std::is_void<typename M::base>::value,
-               CachedFooImpl<typename M::base>, FooImpl>::type {
+               CachedFooImpl<T, typename M::base>, FooImpl<T>>::type {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
@@ -216,8 +220,9 @@ class CachedFooImpl
     _t->cachedMethod(make_shared());
   }
 
-  CachedFooImplPtr<M> make_shared() {
-    return std::static_pointer_cast<CachedFooImpl<M>>(this->shared_from_this());
+  CachedFooImplPtr<T, M> make_shared() {
+    return std::static_pointer_cast<CachedFooImpl<T, M>>(
+      this->shared_from_this());
   }
 };
 
@@ -238,14 +243,14 @@ using FooPtr = std::shared_ptr<Foo<T>>;
 template<typename T>
 class Foo {
  public:
-  Foo(FooImplPtr impl) : _impl(std::move(impl)) {}
+  Foo(FooImplPtr<T> impl) : _impl(std::move(impl)) {}
 
   virtual void method() {
     _impl->method();
   }
 
  private:
-  FooImplPtr _impl;
+  FooImplPtr<T> _impl;
 };
 
 /*
@@ -322,11 +327,11 @@ class Bar : public Top {
   virtual FooPtr<Target> cachedFoo() = 0;
 
   // Virtual methods
-  virtual void simpleMethod(SimpleFooImplPtr<Bar> simpleFoo) {
+  virtual void simpleMethod(SimpleFooImplPtr<Target, Bar> simpleFoo) {
     std::cout << "Running simple in Bar" << std::endl;
   }
 
-  virtual void cachedMethod(CachedFooImplPtr<Bar> cachedFoo) {
+  virtual void cachedMethod(CachedFooImplPtr<Target, Bar> cachedFoo) {
     std::cout << "Running cached in Bar" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
   }
@@ -355,12 +360,12 @@ class BarCrtp : public Bar {
   // Overriding methods
   FooPtr<Target> simpleFoo() override {
     return std::make_shared<Foo<Target>>(
-      std::make_shared<SimpleFooImpl<Derived>>(make_shared()));
+      std::make_shared<SimpleFooImpl<Target, Derived>>(make_shared()));
   }
 
   FooPtr<Target> cachedFoo() override {
     return std::make_shared<Foo<Target>>(
-      std::make_shared<CachedFooImpl<Derived>>(make_shared()));
+      std::make_shared<CachedFooImpl<Target, Derived>>(make_shared()));
   }
 
  private:
@@ -387,11 +392,11 @@ class BarDerived : public BarCrtp<BarDerived> {
   using base = Bar;
   using Cache = double;
 
-  virtual void simpleMethod(SimpleFooImplPtr<BarDerived> simpleFoo) {
+  virtual void simpleMethod(SimpleFooImplPtr<Target, BarDerived> simpleFoo) {
     std::cout << "Running simple in BarDerived" << std::endl;
   }
 
-  virtual void cachedMethod(CachedFooImplPtr<BarDerived> cachedFoo) {
+  virtual void cachedMethod(CachedFooImplPtr<Target, BarDerived> cachedFoo) {
     std::cout << "Running cached in BarDerived" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
   }
