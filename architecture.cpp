@@ -294,11 +294,8 @@ class Bar : public Top {
   using base = Top;
 
   // Purely virtual methods
-  virtual FooPtr<Target> simpleTargetFoo() = 0;
-  virtual FooPtr<Target> cachedTargetFoo() = 0;
-
-  virtual FooPtr<Spot> simpleSpotFoo() = 0;
-  virtual FooPtr<Spot> cachedSpotFoo() = 0;
+  virtual FooPtr<Target> targetFoo(bool cached) = 0;
+  virtual FooPtr<Spot> spotFoo(bool cached) = 0;
 
   // Virtual methods
   template<typename T>
@@ -351,20 +348,16 @@ class BarCrtp : public Bar {
   using DerivedPtr = std::shared_ptr<Derived>;
 
   // Overriding methods
-  FooPtr<Target> simpleTargetFoo() override {
+  FooPtr<Target> targetFoo(bool cached = true) override {
+    if (cached)
+      return std::make_shared<CachedFoo<Target, Derived>>(make_shared());
     return std::make_shared<SimpleFoo<Target, Derived>>(make_shared());
   }
 
-  FooPtr<Target> cachedTargetFoo() override {
-    return std::make_shared<CachedFoo<Target, Derived>>(make_shared());
-  }
-
-  FooPtr<Spot> simpleSpotFoo() override {
+  FooPtr<Spot> spotFoo(bool cached = true) override {
+    if (cached)
+      return std::make_shared<CachedFoo<Spot, Derived>>(make_shared());
     return std::make_shared<SimpleFoo<Spot, Derived>>(make_shared());
-  }
-
-  FooPtr<Spot> cachedSpotFoo() override {
-    return std::make_shared<CachedFoo<Spot, Derived>>(make_shared());
   }
 
  private:
@@ -455,38 +448,38 @@ int main(int argc, char **argv) {
   std::cout << "Test BarDerived" << std::endl;
   std::cout << "================" << std::endl;
   auto barDerived = std::make_shared<BarDerived>();
-  barDerived->simpleTargetFoo()->method();
-  barDerived->cachedTargetFoo()->method();
-  barDerived->simpleSpotFoo()->method();
-  barDerived->cachedSpotFoo()->method();
+  barDerived->targetFoo(false)->method();
+  barDerived->targetFoo(true)->method();
+  barDerived->spotFoo(false)->method();
+  barDerived->spotFoo(true)->method();
 
   std::cout << std::endl;
 
   std::cout << "Test BarDerived casted to Bar" << std::endl;
   std::cout << "==============================" << std::endl;
-  static_cast<BarPtr>(barDerived)->simpleTargetFoo()->method();
-  static_cast<BarPtr>(barDerived)->cachedTargetFoo()->method();
-  static_cast<BarPtr>(barDerived)->simpleSpotFoo()->method();
-  static_cast<BarPtr>(barDerived)->cachedSpotFoo()->method();
+  static_cast<BarPtr>(barDerived)->targetFoo(false)->method();
+  static_cast<BarPtr>(barDerived)->targetFoo(true)->method();
+  static_cast<BarPtr>(barDerived)->spotFoo(false)->method();
+  static_cast<BarPtr>(barDerived)->spotFoo(true)->method();
 
   std::cout << std::endl;
 
   std::cout << "Test BarReusing" << std::endl;
   std::cout << "================" << std::endl;
   auto barReusing = std::make_shared<BarReusing>();
-  barReusing->simpleTargetFoo()->method();
-  barReusing->cachedTargetFoo()->method();
-  barReusing->simpleSpotFoo()->method();
-  barReusing->cachedSpotFoo()->method();
+  barReusing->targetFoo(false)->method();
+  barReusing->targetFoo(true)->method();
+  barReusing->spotFoo(false)->method();
+  barReusing->spotFoo(true)->method();
 
   std::cout << std::endl;
 
   std::cout << "Test BarReusing casted to Bar" << std::endl;
   std::cout << "==============================" << std::endl;
-  static_cast<BarPtr>(barReusing)->simpleTargetFoo()->method();
-  static_cast<BarPtr>(barReusing)->cachedTargetFoo()->method();
-  static_cast<BarPtr>(barReusing)->simpleSpotFoo()->method();
-  static_cast<BarPtr>(barReusing)->cachedSpotFoo()->method();
+  static_cast<BarPtr>(barReusing)->targetFoo(false)->method();
+  static_cast<BarPtr>(barReusing)->targetFoo(true)->method();
+  static_cast<BarPtr>(barReusing)->spotFoo(false)->method();
+  static_cast<BarPtr>(barReusing)->spotFoo(true)->method();
 
   std::cout << std::endl;
 
