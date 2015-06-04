@@ -157,7 +157,7 @@ class SimpleFoo
   }
 
   void methodImpl(has_simpleMethod_tag) {
-    _m->template simpleMethod<T>(make_shared());
+    _m->simpleMethod(make_shared());
   }
 
   SimpleFooPtr<T, M> make_shared() {
@@ -215,7 +215,7 @@ class CachedFoo
   }
 
   void methodImpl(has_cachedMethod_tag) {
-    _m->template cachedMethod<T>(make_shared());
+    _m->cachedMethod(make_shared());
   }
 
   CachedFooPtr<T, M> make_shared() {
@@ -297,35 +297,25 @@ class Bar : public Top {
   virtual FooPtr<Target> targetFoo(bool cached) = 0;
   virtual FooPtr<Spot> spotFoo(bool cached) = 0;
 
-  // Virtual methods
-  template<typename T>
-  void simpleMethod(SimpleFooPtr<T, Bar> simpleFoo);
+  // Concrete methods
+  void simpleMethod(SimpleFooPtr<Target, Bar> simpleFoo) {
+    std::cout << "Running simple for Target in Bar" << std::endl;
+  }
 
-  template<typename T>
-  void cachedMethod(CachedFooPtr<T, Bar> simpleFoo);
+  void cachedMethod(CachedFooPtr<Target, Bar> cachedFoo) {
+    std::cout << "Running cached for Target in Bar" << std::endl;
+    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+  }
+
+  void simpleMethod(SimpleFooPtr<Spot, Bar> simpleFoo) {
+    std::cout << "Running simple for Spot in Bar" << std::endl;
+  }
+
+  void cachedMethod(CachedFooPtr<Spot, Bar> cachedFoo) {
+    std::cout << "Running cached for Spot in Bar" << std::endl;
+    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+  }
 };
-
-template<> void Bar::simpleMethod<Target>(
-    SimpleFooPtr<Target, Bar> simpleFoo) {
-  std::cout << "Running simple for Target in Bar" << std::endl;
-}
-
-template<> void Bar::cachedMethod<Target>(
-    CachedFooPtr<Target, Bar> cachedFoo) {
-  std::cout << "Running cached for Target in Bar" << std::endl;
-  std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
-}
-
-template<> void Bar::simpleMethod<Spot>(
-    SimpleFooPtr<Spot, Bar> simpleFoo) {
-  std::cout << "Running simple for Spot in Bar" << std::endl;
-}
-
-template<> void Bar::cachedMethod<Spot>(
-    CachedFooPtr<Spot, Bar> cachedFoo) {
-  std::cout << "Running cached for Spot in Bar" << std::endl;
-  std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
-}
 
 /* CLASS BarCrtp **************************************************************/
 
@@ -384,35 +374,25 @@ class BarDerived : public BarCrtp<BarDerived> {
   using base = Bar;
   using Cache = double;
 
-  // Virtual methods
-  template<typename T>
-  void simpleMethod(SimpleFooPtr<T, BarDerived> simpleFoo);
+  // Concrete methods
+  void simpleMethod(SimpleFooPtr<Target, BarDerived> simpleFoo) {
+    std::cout << "Running simple for Target in BarDerived" << std::endl;
+  }
 
-  template<typename T>
-  void cachedMethod(CachedFooPtr<T, BarDerived> simpleFoo);
+  void cachedMethod(CachedFooPtr<Target, BarDerived> cachedFoo) {
+    std::cout << "Running cached for Target in BarDerived" << std::endl;
+    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+  }
+
+  void simpleMethod(SimpleFooPtr<Spot, BarDerived> simpleFoo) {
+    std::cout << "Running simple for Spot in BarDerived" << std::endl;
+  }
+
+  void cachedMethod(CachedFooPtr<Spot, BarDerived> cachedFoo) {
+    std::cout << "Running cached for Spot in BarDerived" << std::endl;
+    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+  }
 };
-
-template<> void BarDerived::simpleMethod<Target>(
-    SimpleFooPtr<Target, BarDerived> simpleFoo) {
-  std::cout << "Running simple for Target in BarDerived" << std::endl;
-}
-
-template<> void BarDerived::cachedMethod<Target>(
-    CachedFooPtr<Target, BarDerived> cachedFoo) {
-  std::cout << "Running cached for Target in BarDerived" << std::endl;
-  std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
-}
-
-template<> void BarDerived::simpleMethod<Spot>(
-    SimpleFooPtr<Spot, BarDerived> simpleFoo) {
-  std::cout << "Running simple for Spot in BarDerived" << std::endl;
-}
-
-template<> void BarDerived::cachedMethod<Spot>(
-    CachedFooPtr<Spot, BarDerived> cachedFoo) {
-  std::cout << "Running cached for Spot in BarDerived" << std::endl;
-  std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
-}
 
 /* CLASS BarReusing ***********************************************************/
 
