@@ -115,27 +115,27 @@ class FooImpl : public std::enable_shared_from_this<FooImpl> {
 /* CLASS SimpleFooImpl ********************************************************/
 
 // Forward declaration
-template<typename T>
+template<typename M>
 class SimpleFooImpl;
 
 // Alias
-template<typename T>
-using SimpleFooImplPtr = std::shared_ptr<SimpleFooImpl<T>>;
+template<typename M>
+using SimpleFooImplPtr = std::shared_ptr<SimpleFooImpl<M>>;
 
 /**
  * @class SimpleFooImpl
  * Simple implementation of Foo front-end
  */
-template<typename T>
+template<typename M>
 class SimpleFooImpl
-    : public std::conditional<!std::is_void<typename T::base>::value,
-               SimpleFooImpl<typename T::base>, FooImpl>::type {
+    : public std::conditional<!std::is_void<typename M::base>::value,
+               SimpleFooImpl<typename M::base>, FooImpl>::type {
  public:
   // Alias
-  using TPtr = std::shared_ptr<T>;
+  using MPtr = std::shared_ptr<M>;
 
   // Constructor
-  SimpleFooImpl(TPtr t = TPtr())
+  SimpleFooImpl(MPtr t = MPtr())
       : _t(std::move(t)) {
   }
 
@@ -143,12 +143,12 @@ class SimpleFooImpl
 
   // Overriden methods
   void method() override {
-    methodImpl(typename has_member_simpleMethod<T>::tag());
+    methodImpl(typename has_member_simpleMethod<M>::tag());
   }
 
  private:
   // Instance variables
-  TPtr _t;
+  MPtr _t;
 
   // Concrete methods
   void methodImpl(no_simpleMethod_tag) {
@@ -159,42 +159,42 @@ class SimpleFooImpl
     _t->simpleMethod(make_shared());
   }
 
-  SimpleFooImplPtr<T> make_shared() {
-    return std::static_pointer_cast<SimpleFooImpl<T>>(this->shared_from_this());
+  SimpleFooImplPtr<M> make_shared() {
+    return std::static_pointer_cast<SimpleFooImpl<M>>(this->shared_from_this());
   }
 };
 
 /* CLASS CachedFooImpl ********************************************************/
 
 // Forward declaration
-template<typename T>
+template<typename M>
 class CachedFooImpl;
 
 // Alias
-template<typename T>
-using CachedFooImplPtr = std::shared_ptr<CachedFooImpl<T>>;
+template<typename M>
+using CachedFooImplPtr = std::shared_ptr<CachedFooImpl<M>>;
 
 /**
  * @class CachedFooImpl
  * Cached implementation of Foo front-end
  */
-template<typename T>
+template<typename M>
 class CachedFooImpl
-    : public std::conditional<!std::is_void<typename T::base>::value,
-               CachedFooImpl<typename T::base>, FooImpl>::type {
+    : public std::conditional<!std::is_void<typename M::base>::value,
+               CachedFooImpl<typename M::base>, FooImpl>::type {
  public:
   // Alias
-  using TPtr = std::shared_ptr<T>;
-  using Cache = typename T::Cache;
+  using MPtr = std::shared_ptr<M>;
+  using Cache = typename M::Cache;
 
   // Constructor
-  CachedFooImpl(TPtr t = TPtr(), Cache cache = Cache())
+  CachedFooImpl(MPtr t = MPtr(), Cache cache = Cache())
       : _t(std::move(t)), _cache(std::move(cache)) {
   }
 
   // Overriden methods
   void method() override {
-    methodImpl(typename has_member_simpleMethod<T>::tag());
+    methodImpl(typename has_member_simpleMethod<M>::tag());
   }
 
   // Concrete methods
@@ -204,7 +204,7 @@ class CachedFooImpl
 
  private:
   // Instance variables
-  TPtr _t;
+  MPtr _t;
   Cache _cache;
 
   // Concrete methods
@@ -216,8 +216,8 @@ class CachedFooImpl
     _t->cachedMethod(make_shared());
   }
 
-  CachedFooImplPtr<T> make_shared() {
-    return std::static_pointer_cast<CachedFooImpl<T>>(this->shared_from_this());
+  CachedFooImplPtr<M> make_shared() {
+    return std::static_pointer_cast<CachedFooImpl<M>>(this->shared_from_this());
   }
 };
 
