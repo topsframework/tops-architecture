@@ -323,8 +323,11 @@ class Bar : public Top {
   using base = Top;
 
   // Purely virtual methods
-  virtual FooPtr<Target> simpleFoo() = 0;
-  virtual FooPtr<Target> cachedFoo() = 0;
+  virtual FooPtr<Target> simpleTargetFoo() = 0;
+  virtual FooPtr<Target> cachedTargetFoo() = 0;
+
+  virtual FooPtr<Spot> simpleSpotFoo() = 0;
+  virtual FooPtr<Spot> cachedSpotFoo() = 0;
 
   // Virtual methods
   template<typename T>
@@ -334,14 +337,25 @@ class Bar : public Top {
   void cachedMethod(CachedFooImplPtr<T, Bar> simpleFoo);
 };
 
-template<>
-void Bar::simpleMethod<Target>(SimpleFooImplPtr<Target, Bar> simpleFoo) {
+template<> void Bar::simpleMethod<Target>(
+    SimpleFooImplPtr<Target, Bar> simpleFoo) {
   std::cout << "Running simple for Target in Bar" << std::endl;
 }
 
-template<>
-void Bar::cachedMethod<Target>(CachedFooImplPtr<Target, Bar> cachedFoo) {
+template<> void Bar::cachedMethod<Target>(
+    CachedFooImplPtr<Target, Bar> cachedFoo) {
   std::cout << "Running cached for Target in Bar" << std::endl;
+  std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+}
+
+template<> void Bar::simpleMethod<Spot>(
+    SimpleFooImplPtr<Spot, Bar> simpleFoo) {
+  std::cout << "Running simple for Spot in Bar" << std::endl;
+}
+
+template<> void Bar::cachedMethod<Spot>(
+    CachedFooImplPtr<Spot, Bar> cachedFoo) {
+  std::cout << "Running cached for Spot in Bar" << std::endl;
   std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
 }
 
@@ -366,14 +380,24 @@ class BarCrtp : public Bar {
   using DerivedPtr = std::shared_ptr<Derived>;
 
   // Overriding methods
-  FooPtr<Target> simpleFoo() override {
+  FooPtr<Target> simpleTargetFoo() override {
     return std::make_shared<Foo<Target>>(
       std::make_shared<SimpleFooImpl<Target, Derived>>(make_shared()));
   }
 
-  FooPtr<Target> cachedFoo() override {
+  FooPtr<Target> cachedTargetFoo() override {
     return std::make_shared<Foo<Target>>(
       std::make_shared<CachedFooImpl<Target, Derived>>(make_shared()));
+  }
+
+  FooPtr<Spot> simpleSpotFoo() override {
+    return std::make_shared<Foo<Spot>>(
+      std::make_shared<SimpleFooImpl<Spot, Derived>>(make_shared()));
+  }
+
+  FooPtr<Spot> cachedSpotFoo() override {
+    return std::make_shared<Foo<Spot>>(
+      std::make_shared<CachedFooImpl<Spot, Derived>>(make_shared()));
   }
 
  private:
@@ -408,16 +432,25 @@ class BarDerived : public BarCrtp<BarDerived> {
   void cachedMethod(CachedFooImplPtr<T, BarDerived> simpleFoo);
 };
 
-template<>
-void BarDerived::simpleMethod<Target>(
+template<> void BarDerived::simpleMethod<Target>(
     SimpleFooImplPtr<Target, BarDerived> simpleFoo) {
   std::cout << "Running simple for Target in BarDerived" << std::endl;
 }
 
-template<>
-void BarDerived::cachedMethod<Target>(
+template<> void BarDerived::cachedMethod<Target>(
     CachedFooImplPtr<Target, BarDerived> cachedFoo) {
   std::cout << "Running cached for Target in BarDerived" << std::endl;
+  std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+}
+
+template<> void BarDerived::simpleMethod<Spot>(
+    SimpleFooImplPtr<Spot, BarDerived> simpleFoo) {
+  std::cout << "Running simple for Spot in BarDerived" << std::endl;
+}
+
+template<> void BarDerived::cachedMethod<Spot>(
+    CachedFooImplPtr<Spot, BarDerived> cachedFoo) {
+  std::cout << "Running cached for Spot in BarDerived" << std::endl;
   std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
 }
 
@@ -455,30 +488,38 @@ int main(int argc, char **argv) {
   std::cout << "Test BarDerived" << std::endl;
   std::cout << "================" << std::endl;
   auto barDerived = std::make_shared<BarDerived>();
-  barDerived->simpleFoo()->method();
-  barDerived->cachedFoo()->method();
+  barDerived->simpleTargetFoo()->method();
+  barDerived->cachedTargetFoo()->method();
+  barDerived->simpleSpotFoo()->method();
+  barDerived->cachedSpotFoo()->method();
 
   std::cout << std::endl;
 
   std::cout << "Test BarDerived casted to Bar" << std::endl;
   std::cout << "==============================" << std::endl;
-  static_cast<BarPtr>(barDerived)->simpleFoo()->method();
-  static_cast<BarPtr>(barDerived)->cachedFoo()->method();
+  static_cast<BarPtr>(barDerived)->simpleTargetFoo()->method();
+  static_cast<BarPtr>(barDerived)->cachedTargetFoo()->method();
+  static_cast<BarPtr>(barDerived)->simpleSpotFoo()->method();
+  static_cast<BarPtr>(barDerived)->cachedSpotFoo()->method();
 
   std::cout << std::endl;
 
   std::cout << "Test BarReusing" << std::endl;
   std::cout << "================" << std::endl;
   auto barReusing = std::make_shared<BarReusing>();
-  barReusing->simpleFoo()->method();
-  barReusing->cachedFoo()->method();
+  barReusing->simpleTargetFoo()->method();
+  barReusing->cachedTargetFoo()->method();
+  barReusing->simpleSpotFoo()->method();
+  barReusing->cachedSpotFoo()->method();
 
   std::cout << std::endl;
 
   std::cout << "Test BarReusing casted to Bar" << std::endl;
   std::cout << "==============================" << std::endl;
-  static_cast<BarPtr>(barReusing)->simpleFoo()->method();
-  static_cast<BarPtr>(barReusing)->cachedFoo()->method();
+  static_cast<BarPtr>(barReusing)->simpleTargetFoo()->method();
+  static_cast<BarPtr>(barReusing)->cachedTargetFoo()->method();
+  static_cast<BarPtr>(barReusing)->simpleSpotFoo()->method();
+  static_cast<BarPtr>(barReusing)->cachedSpotFoo()->method();
 
   std::cout << std::endl;
 
