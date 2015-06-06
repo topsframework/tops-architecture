@@ -17,6 +17,7 @@
 // Standard headers
 #include <memory>
 #include <iostream>
+#include <exception>
 #include <type_traits>
 
 /*
@@ -217,7 +218,8 @@ class SimpleFoo
 
   // Concrete methods
   void methodImpl(no_simpleMethod_tag) {
-    static_assert(is_base, "Class don't have method!");
+    static_assert(is_base, "Class don't have method 'simpleMethod'!");
+    throw std::logic_error("Calling from base class with no 'simpleMethod'");
   }
 
   void methodImpl(has_simpleMethod_tag) {
@@ -278,7 +280,8 @@ class CachedFoo
 
   // Concrete methods
   void methodImpl(no_cachedMethod_tag) {
-    static_assert(is_base, "Class don't have method!");
+    static_assert(is_base, "Class don't have method 'cachedMethod'!");
+    throw std::logic_error("Calling from base class with no 'cachedMethod'");
   }
 
   void methodImpl(has_cachedMethod_tag) {
