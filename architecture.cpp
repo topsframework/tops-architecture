@@ -46,6 +46,7 @@
 // - Two alias `has_##member` and `no_##member` to selectively create
 //   methods by applying SFINAE on its parameters.
 
+
 #define GENERATE_HAS_MEMBER(member)                                            \
                                                                                \
 template<typename T, typename Dummy>                                           \
@@ -72,6 +73,30 @@ class HasMember_##member<T, Result(Params...)>                                 \
  public:                                                                       \
   static constexpr bool value = decltype(test<T>(nullptr))::value              \
     || HasMember_##member<typename T::Base, Result(Params...)>::value;         \
+};                                                                             \
+                                                                               \
+template<typename Result, typename... Params>                                  \
+class HasMember_##member<void, const Result(Params...)> {                      \
+ public:                                                                       \
+  static constexpr bool value = false;                                         \
+};                                                                             \
+                                                                               \
+template<typename T, typename Result, typename... Params>                      \
+class HasMember_##member<T, const Result(Params...)>                           \
+{                                                                              \
+ private:                                                                      \
+  template<typename U, U> class Check;                                         \
+                                                                               \
+  template<typename U>                                                         \
+  static std::true_type test(                                                  \
+    Check<Result(U::*)(Params...) const, &U::member>*);                        \
+                                                                               \
+  template<typename U>                                                         \
+  static std::false_type test(...);                                            \
+                                                                               \
+ public:                                                                       \
+  static constexpr bool value = decltype(test<T>(nullptr))::value              \
+    || HasMember_##member<typename T::Base, const Result(Params...)>::value;   \
 };                                                                             \
                                                                                \
 struct no_##member##_tag {};                                                   \
@@ -176,7 +201,7 @@ class SimpleFoo
 
   // Overriden methods
   void method() override {
-    methodImpl(typename has_member_simpleMethod<M, void(SelfPtr)>::tag());
+    methodImpl(typename has_member_simpleMethod<M, const void(SelfPtr)>::tag());
   }
 
  private:
@@ -231,7 +256,7 @@ class CachedFoo
 
   // Overriden methods
   void method() override {
-    methodImpl(typename has_member_cachedMethod<M, void(SelfPtr)>::tag());
+    methodImpl(typename has_member_cachedMethod<M, const void(SelfPtr)>::tag());
   }
 
   // Concrete methods
@@ -357,20 +382,20 @@ class BarCrtp : public Bar {
   }
 
   // Virtual methods
-  virtual void simpleMethod(SimpleFooPtr<Target, Derived> simpleFoo) {
+  virtual void simpleMethod(SimpleFooPtr<Target, Derived> simpleFoo) const {
     std::cout << "Running simple for Target in BarCrtp" << std::endl;
   }
 
-  virtual void cachedMethod(CachedFooPtr<Target, Derived> cachedFoo) {
+  virtual void cachedMethod(CachedFooPtr<Target, Derived> cachedFoo) const {
     std::cout << "Running cached for Target in BarCrtp" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
   }
 
-  virtual void simpleMethod(SimpleFooPtr<Spot, Derived> simpleFoo) {
+  virtual void simpleMethod(SimpleFooPtr<Spot, Derived> simpleFoo) const {
     std::cout << "Running simple for Spot in BarCrtp" << std::endl;
   }
 
-  virtual void cachedMethod(CachedFooPtr<Spot, Derived> cachedFoo) {
+  virtual void cachedMethod(CachedFooPtr<Spot, Derived> cachedFoo) const {
     std::cout << "Running cached for Spot in BarCrtp" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
   }
@@ -400,20 +425,20 @@ class BarDerived : public BarCrtp<BarDerived> {
   using Cache = double;
 
   // Overriden methods
-  void simpleMethod(SimpleFooPtr<Target, BarDerived> simpleFoo) override {
+  void simpleMethod(SimpleFooPtr<Target, BarDerived> simpleFoo) const override {
     std::cout << "Running simple for Target in BarDerived" << std::endl;
   }
 
-  void cachedMethod(CachedFooPtr<Target, BarDerived> cachedFoo) override {
+  void cachedMethod(CachedFooPtr<Target, BarDerived> cachedFoo) const override {
     std::cout << "Running cached for Target in BarDerived" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
   }
 
-  void simpleMethod(SimpleFooPtr<Spot, BarDerived> simpleFoo) override {
+  void simpleMethod(SimpleFooPtr<Spot, BarDerived> simpleFoo) const override {
     std::cout << "Running simple for Spot in BarDerived" << std::endl;
   }
 
-  void cachedMethod(CachedFooPtr<Spot, BarDerived> cachedFoo) override {
+  void cachedMethod(CachedFooPtr<Spot, BarDerived> cachedFoo) const override {
     std::cout << "Running cached for Spot in BarDerived" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
   }
