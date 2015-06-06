@@ -46,11 +46,12 @@
 // - Two alias `has_##member` and `no_##member` to selectively create
 //   methods by applying SFINAE on its parameters.
 
-
 #define GENERATE_HAS_MEMBER(member)                                            \
                                                                                \
 template<typename T, typename Dummy>                                           \
 class HasMember_##member;                                                      \
+                                                                               \
+/** NON-CONST MEMBER ********************************************************/ \
                                                                                \
 template<typename Result, typename... Params>                                  \
 class HasMember_##member<void, Result(Params...)> {                            \
@@ -74,6 +75,8 @@ class HasMember_##member<T, Result(Params...)>                                 \
   static constexpr bool value = decltype(test<T>(nullptr))::value              \
     || HasMember_##member<typename T::Base, Result(Params...)>::value;         \
 };                                                                             \
+                                                                               \
+/** CONST MEMBER ************************************************************/ \
                                                                                \
 template<typename Result, typename... Params>                                  \
 class HasMember_##member<void, const Result(Params...)> {                      \
@@ -99,8 +102,12 @@ class HasMember_##member<T, const Result(Params...)>                           \
     || HasMember_##member<typename T::Base, const Result(Params...)>::value;   \
 };                                                                             \
                                                                                \
+/** TAGS ********************************************************************/ \
+                                                                               \
 struct no_##member##_tag {};                                                   \
 struct has_##member##_tag {};                                                  \
+                                                                               \
+/** TYPE TRAIT **************************************************************/ \
                                                                                \
 template<typename T, typename Dummy>                                           \
 struct has_member_##member;                                                    \
