@@ -48,37 +48,50 @@
 // - Two alias `has_##member` and `no_##member` to selectively create
 //   methods by applying SFINAE on its parameters.
 
-#define GENERATE_HAS_MEMBER(member)                                         \
-                                                                            \
-template <typename T>                                                       \
-class HasMember_##member                                                    \
-{                                                                           \
-private:                                                                    \
-    using Yes = char[2];                                                    \
-    using  No = char[1];                                                    \
-                                                                            \
-    struct Fallback { int member; };                                        \
-    struct Derived : T, Fallback { };                                       \
-                                                                            \
-    template<typename U> static No&  test (decltype(U::member)*);           \
-    template<typename U> static Yes& test (U*);                             \
-                                                                            \
-public:                                                                     \
-    static constexpr bool RESULT                                            \
-      = sizeof(test<Derived>(nullptr)) == sizeof(Yes);                      \
-};                                                                          \
-                                                                            \
-struct no_##member##_tag {};                                                \
-struct has_##member##_tag {};                                               \
-                                                                            \
-template<typename T>                                                        \
-struct has_member_##member                                                  \
-    : public std::integral_constant<bool, HasMember_##member<T>::RESULT> {  \
-                                                                            \
-  using tag = typename std::conditional<has_member_##member<T>::value,      \
-                has_##member##_tag, no_##member##_tag>::type;               \
+#define GENERATE_HAS_MEMBER(member)                                            \
+                                                                               \
+template<typename T, typename Dummy>                                           \
+class HasMember_##member;                                                      \
+                                                                               \
+template<typename Result, typename... Params>                                  \
+class HasMember_##member<void, Result(Params...)> {                            \
+ public:                                                                       \
+  static constexpr bool value = false;                                         \
+};                                                                             \
+                                                                               \
+template<typename T, typename Result, typename... Params>                      \
+class HasMember_##member<T, Result(Params...)>                                 \
+{                                                                              \
+ private:                                                                      \
+  template<typename U, U> class Check;                                         \
+                                                                               \
+  template<typename U>                                                         \
+  static std::true_type test(Check<Result(U::*)(Params...), &U::member>*);     \
+                                                                               \
+  template<typename U>                                                         \
+  static std::false_type test(...);                                            \
+                                                                               \
+ public:                                                                       \
+  static constexpr bool value = decltype(test<T>(nullptr))::value              \
+    || HasMember_##member<typename T::base, Result(Params...)>::value;         \
+};                                                                             \
+                                                                               \
+struct no_##member##_tag {};                                                   \
+struct has_##member##_tag {};                                                  \
+                                                                               \
+template<typename T, typename Dummy>                                           \
+struct has_member_##member;                                                    \
+                                                                               \
+template<typename T, typename Result, typename... Params>                      \
+struct has_member_##member<T, Result(Params...)>                               \
+    : public std::integral_constant<                                           \
+               bool, HasMember_##member<T, Result(Params...)>::value> {        \
+                                                                               \
+  using tag = typename std::conditional<                                       \
+                has_member_##member<T, Result(Params...)>::value,              \
+                has_##member##_tag, no_##member##_tag                          \
+              >::type;                                                         \
 };
-
 
 // Generate the above structure for the following list of methods:
 GENERATE_HAS_MEMBER(simpleMethod)
@@ -153,6 +166,9 @@ class SimpleFoo
   // Alias
   using MPtr = std::shared_ptr<M>;
 
+  using Self = SimpleFoo<T, M>;
+  using SelfPtr = std::shared_ptr<Self>;
+
   // Constructor
   SimpleFoo(MPtr m = MPtr())
       : _m(std::move(m)) {
@@ -162,7 +178,7 @@ class SimpleFoo
 
   // Overriden methods
   void method() override {
-    methodImpl(typename has_member_simpleMethod<M>::tag());
+    methodImpl(typename has_member_simpleMethod<M, void(SelfPtr)>::tag());
   }
 
  private:
@@ -207,6 +223,9 @@ class CachedFoo
   using MPtr = std::shared_ptr<M>;
   using Cache = typename M::Cache;
 
+  using Self = CachedFoo<T, M>;
+  using SelfPtr = std::shared_ptr<Self>;
+
   // Constructor
   CachedFoo(MPtr m = MPtr(), Cache cache = Cache())
       : _m(std::move(m)), _cache(std::move(cache)) {
@@ -214,7 +233,7 @@ class CachedFoo
 
   // Overriden methods
   void method() override {
-    methodImpl(typename has_member_cachedMethod<M>::tag());
+    methodImpl(typename has_member_cachedMethod<M, void(SelfPtr)>::tag());
   }
 
   // Concrete methods
@@ -379,7 +398,7 @@ using BarDerivedPtr = std::shared_ptr<BarDerived>;
  */
 class BarDerived : public BarCrtp<BarDerived> {
  public:
-  using base = Bar;
+  using base = BarCrtp<BarDerived>;
   using Cache = double;
 
   // Overriden methods
@@ -416,7 +435,7 @@ using BarReusingPtr = std::shared_ptr<BarReusing>;
  */
 class BarReusing : public BarCrtp<BarReusing> {
  public:
-  using base = Bar;
+  using base = BarCrtp<BarReusing>;
 };
 
 /*
