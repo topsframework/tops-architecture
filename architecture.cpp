@@ -17,8 +17,6 @@
 // Standard headers
 #include <memory>
 #include <iostream>
-#include <typeinfo>
-#include <exception>
 #include <type_traits>
 
 /*
@@ -147,21 +145,21 @@ class Foo : public std::enable_shared_from_this<Foo<T>> {
 /* CLASS SimpleFoo ************************************************************/
 
 // Forward declaration
-template<typename T, typename M>
+template<typename T, typename M, bool is_base>
 class SimpleFoo;
 
 // Alias
-template<typename T, typename M>
-using SimpleFooPtr = std::shared_ptr<SimpleFoo<T, M>>;
+template<typename T, typename M, bool is_base = false>
+using SimpleFooPtr = std::shared_ptr<SimpleFoo<T, M, is_base>>;
 
 /**
  * @class SimpleFoo
  * Simple implementation of Foo front-end
  */
-template<typename T, typename M>
+template<typename T, typename M, bool is_base = false>
 class SimpleFoo
     : public std::conditional<!std::is_void<typename M::base>::value,
-               SimpleFoo<T, typename M::base>, Foo<T>>::type {
+               SimpleFoo<T, typename M::base, true>, Foo<T>>::type {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
@@ -187,7 +185,7 @@ class SimpleFoo
 
   // Concrete methods
   void methodImpl(no_simpleMethod_tag) {
-    throw std::logic_error("Class don't have method!");
+    static_assert(is_base, "Class don't have method!");
   }
 
   void methodImpl(has_simpleMethod_tag) {
@@ -203,21 +201,21 @@ class SimpleFoo
 /* CLASS CachedFoo ************************************************************/
 
 // Forward declaration
-template<typename T, typename M>
+template<typename T, typename M, bool is_base>
 class CachedFoo;
 
 // Alias
-template<typename T, typename M>
-using CachedFooPtr = std::shared_ptr<CachedFoo<T, M>>;
+template<typename T, typename M, bool is_base = false>
+using CachedFooPtr = std::shared_ptr<CachedFoo<T, M, is_base>>;
 
 /**
  * @class CachedFoo
  * Cached implementation of Foo front-end
  */
-template<typename T, typename M>
+template<typename T, typename M, bool is_base = false>
 class CachedFoo
     : public std::conditional<!std::is_void<typename M::base>::value,
-               CachedFoo<T, typename M::base>, Foo<T>>::type {
+               CachedFoo<T, typename M::base, true>, Foo<T>>::type {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
@@ -248,7 +246,7 @@ class CachedFoo
 
   // Concrete methods
   void methodImpl(no_cachedMethod_tag) {
-    throw std::logic_error("Class don't have method!");
+    static_assert(is_base, "Class don't have method!");
   }
 
   void methodImpl(has_cachedMethod_tag) {
