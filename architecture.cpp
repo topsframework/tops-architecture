@@ -71,7 +71,7 @@ class HasMember_##member<T, Result(Params...)>                                 \
                                                                                \
  public:                                                                       \
   static constexpr bool value = decltype(test<T>(nullptr))::value              \
-    || HasMember_##member<typename T::base, Result(Params...)>::value;         \
+    || HasMember_##member<typename T::Base, Result(Params...)>::value;         \
 };                                                                             \
                                                                                \
 struct no_##member##_tag {};                                                   \
@@ -158,8 +158,8 @@ using SimpleFooPtr = std::shared_ptr<SimpleFoo<T, M, is_base>>;
  */
 template<typename T, typename M, bool is_base = false>
 class SimpleFoo
-    : public std::conditional<!std::is_void<typename M::base>::value,
-               SimpleFoo<T, typename M::base, true>, Foo<T>>::type {
+    : public std::conditional<!std::is_void<typename M::Base>::value,
+               SimpleFoo<T, typename M::Base, true>, Foo<T>>::type {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
@@ -214,8 +214,8 @@ using CachedFooPtr = std::shared_ptr<CachedFoo<T, M, is_base>>;
  */
 template<typename T, typename M, bool is_base = false>
 class CachedFoo
-    : public std::conditional<!std::is_void<typename M::base>::value,
-               CachedFoo<T, typename M::base, true>, Foo<T>>::type {
+    : public std::conditional<!std::is_void<typename M::Base>::value,
+               CachedFoo<T, typename M::Base, true>, Foo<T>>::type {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
@@ -281,7 +281,7 @@ using TopPtr = std::shared_ptr<Top>;
  */
 class Top : public std::enable_shared_from_this<Top> {
  public:
-  using base = void;
+  using Base = void;
   using Cache = int;
 };
 
@@ -299,7 +299,7 @@ using BazPtr = std::shared_ptr<Baz>;
  */
 class Baz : public Top {
  public:
-  using base = Top;
+  using Base = Top;
 };
 
 /* CLASS Bar ******************************************************************/
@@ -316,7 +316,7 @@ using BarPtr = std::shared_ptr<Bar>;
  */
 class Bar : public Top {
  public:
-  using base = Top;
+  using Base = Top;
 
   // Purely virtual methods
   virtual FooPtr<Target> targetFoo(bool cached) = 0;
@@ -340,7 +340,7 @@ using BarCrtpPtr = std::shared_ptr<BarCrtp<Derived>>;
 template<typename Derived>
 class BarCrtp : public Bar {
  public:
-  using base = Bar;
+  using Base = Bar;
   using DerivedPtr = std::shared_ptr<Derived>;
 
   // Overriding methods
@@ -396,7 +396,7 @@ using BarDerivedPtr = std::shared_ptr<BarDerived>;
  */
 class BarDerived : public BarCrtp<BarDerived> {
  public:
-  using base = BarCrtp<BarDerived>;
+  using Base = BarCrtp<BarDerived>;
   using Cache = double;
 
   // Overriden methods
@@ -433,7 +433,7 @@ using BarReusingPtr = std::shared_ptr<BarReusing>;
  */
 class BarReusing : public BarCrtp<BarReusing> {
  public:
-  using base = BarCrtp<BarReusing>;
+  using Base = BarCrtp<BarReusing>;
 };
 
 /*
