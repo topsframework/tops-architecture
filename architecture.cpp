@@ -21,7 +21,6 @@
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
-                              IMPLEMENTATION HELPER
  -------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 */
@@ -45,21 +44,21 @@
 // - Two alias `has_##member` and `no_##member` to selectively create
 //   methods by applying SFINAE on its parameters.
 
-#define GENERATE_HAS_MEMBER(member)                                            \
+#define GENERATE_HAS_MEMBER_METHOD(member)                                     \
                                                                                \
 template<typename T, typename Dummy>                                           \
-class HasMember_##member;                                                      \
+class HasMethod_##member;                                                      \
                                                                                \
-/** NON-CONST MEMBER ********************************************************/ \
+/*- NON-CONST METHOD -------------------------------------------------------*/ \
                                                                                \
 template<typename Result, typename... Params>                                  \
-class HasMember_##member<void, Result(Params...)> {                            \
+class HasMethod_##member<void, Result(Params...)> {                            \
  public:                                                                       \
   static constexpr bool value = false;                                         \
 };                                                                             \
                                                                                \
 template<typename T, typename Result, typename... Params>                      \
-class HasMember_##member<T, Result(Params...)>                                 \
+class HasMethod_##member<T, Result(Params...)>                                 \
 {                                                                              \
  private:                                                                      \
   template<typename U, U> class Check;                                         \
@@ -72,19 +71,19 @@ class HasMember_##member<T, Result(Params...)>                                 \
                                                                                \
  public:                                                                       \
   static constexpr bool value = decltype(test<T>(nullptr))::value              \
-    || HasMember_##member<typename T::Base, Result(Params...)>::value;         \
+    || HasMethod_##member<typename T::Base, Result(Params...)>::value;         \
 };                                                                             \
                                                                                \
-/** CONST MEMBER ************************************************************/ \
+/*- CONST METHOD -----------------------------------------------------------*/ \
                                                                                \
 template<typename Result, typename... Params>                                  \
-class HasMember_##member<void, const Result(Params...)> {                      \
+class HasMethod_##member<void, const Result(Params...)> {                      \
  public:                                                                       \
   static constexpr bool value = false;                                         \
 };                                                                             \
                                                                                \
 template<typename T, typename Result, typename... Params>                      \
-class HasMember_##member<T, const Result(Params...)>                           \
+class HasMethod_##member<T, const Result(Params...)>                           \
 {                                                                              \
  private:                                                                      \
   template<typename U, U> class Check;                                         \
@@ -98,33 +97,33 @@ class HasMember_##member<T, const Result(Params...)>                           \
                                                                                \
  public:                                                                       \
   static constexpr bool value = decltype(test<T>(nullptr))::value              \
-    || HasMember_##member<typename T::Base, const Result(Params...)>::value;   \
+    || HasMethod_##member<typename T::Base, const Result(Params...)>::value;   \
 };                                                                             \
                                                                                \
-/** TAGS ********************************************************************/ \
+/*- TAGS -------------------------------------------------------------------*/ \
                                                                                \
 struct no_##member##_tag {};                                                   \
 struct has_##member##_tag {};                                                  \
                                                                                \
-/** TYPE TRAIT **************************************************************/ \
+/*- TYPE TRAIT -------------------------------------------------------------*/ \
                                                                                \
 template<typename T, typename Dummy>                                           \
-struct has_member_##member;                                                    \
+struct has_method_##member;                                                    \
                                                                                \
 template<typename T, typename Result, typename... Params>                      \
-struct has_member_##member<T, Result(Params...)>                               \
+struct has_method_##member<T, Result(Params...)>                               \
     : public std::integral_constant<                                           \
-               bool, HasMember_##member<T, Result(Params...)>::value> {        \
+               bool, HasMethod_##member<T, Result(Params...)>::value> {        \
                                                                                \
   using tag = typename std::conditional<                                       \
-                has_member_##member<T, Result(Params...)>::value,              \
+                has_method_##member<T, Result(Params...)>::value,              \
                 has_##member##_tag, no_##member##_tag                          \
               >::type;                                                         \
 };
 
 // Generate the above structure for the following list of methods:
-GENERATE_HAS_MEMBER(simpleMethod)
-GENERATE_HAS_MEMBER(cachedMethod)
+GENERATE_HAS_MEMBER_METHOD(simpleMethod)
+GENERATE_HAS_MEMBER_METHOD(cachedMethod)
 
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -207,7 +206,7 @@ class SimpleFoo
 
   // Overriden methods
   void method() override {
-    methodImpl(typename has_member_simpleMethod<M, const void(SelfPtr)>::tag());
+    methodImpl(typename has_method_simpleMethod<M, const void(SelfPtr)>::tag());
   }
 
  private:
@@ -263,7 +262,7 @@ class CachedFoo
 
   // Overriden methods
   void method() override {
-    methodImpl(typename has_member_cachedMethod<M, const void(SelfPtr)>::tag());
+    methodImpl(typename has_method_cachedMethod<M, const void(SelfPtr)>::tag());
   }
 
   // Concrete methods
