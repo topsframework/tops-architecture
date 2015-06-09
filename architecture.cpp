@@ -21,28 +21,65 @@
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
+                                 MEMBER DETECTER
  -------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 */
 
-/* MACRO GENERATE_HAS_MEMBER **************************************************/
+// These macro are aimed to create a member detector: a class and type trait
+// that can be used to check when a type/method exists in a class. As there is
+// an infinite number of names, it's impossible to create a standard type trait
+// only with the resources the language provides. Given that, it's necessary to
+// create a macro to automatically generate all classes and alias from a name
+// given as parameter.
 
-// This macro is aimed to create a member detector: a class and type trait
-// that can be used to check when an attribute/method exists in a class.
-// As there is an infinite number of names, it's impossible to create a
-// standard type trait only with the resources the language provides. Given
-// that, it's necessary to create a macro to automatically generate all
-// classes and alias from a name given as parameter.
-
-// The following macro creates:
-// - A template class that uses SFINAE and multiple inheritance to decide if
-//   the member exists in the class. In case it does, the inner class `Derived`
-//   has two `member`s and its size is the same is a char[2]. This information
-//   is to store in `RESULT` a boolean that indicates a member exists.
+// The following macros creates:
+// - Template classes that uses SFINAE and multiple inheritance to decide if
+//   the member exists in the class or in one of its superclasses.
 // - A struct inheriting from `std::integral_constant`, which have a trait
 //   compliant with STL.
-// - Two alias `has_##member` and `no_##member` to selectively create
+// - Two alias `has_##member_tag` and `no_##member_tag` to selectively create
 //   methods by applying SFINAE on its parameters.
+
+/*============================================================================*/
+/*                            MEMBER TYPE DETECTOR                            */
+/*============================================================================*/
+
+#define GENERATE_HAS_MEMBER_TYPE(member)                                       \
+                                                                               \
+/*- TYPE DETECTOR ----------------------------------------------------------*/ \
+                                                                               \
+template<typename T, typename Type>                                            \
+class HasType_##member                                                         \
+{                                                                              \
+ private:                                                                      \
+  template<typename U> static std::true_type test(typename U::Type*);          \
+  template<typename U> static std::false_type test(...);                       \
+                                                                               \
+ public:                                                                       \
+  static constexpr bool value = decltype(test<T>(nullptr))::value              \
+    || HasType_##member<typename T::Base, Type>::value;                        \
+};                                                                             \
+                                                                               \
+/*- TAGS -------------------------------------------------------------------*/ \
+                                                                               \
+struct no_##member##_tag {};                                                   \
+struct has_##member##_tag {};                                                  \
+                                                                               \
+/*- TYPE TRAIT -------------------------------------------------------------*/ \
+                                                                               \
+template<typename T, typename Type>                                            \
+struct has_type_##member                                                       \
+    : public std::integral_constant<bool, HasType_##member<T, Type>::value> {  \
+  using tag = typename std::conditional<                                       \
+                has_type_##member<T, Type>::value,                             \
+                has_##member##_tag, no_##member##_tag                          \
+              >::type;                                                         \
+};
+
+/*============================================================================*/
+/*                           MEMBER METHOD DETECTOR                           */
+/*============================================================================*/
 
 #define GENERATE_HAS_MEMBER_METHOD(member)                                     \
                                                                                \
