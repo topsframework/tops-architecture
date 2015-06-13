@@ -160,10 +160,6 @@ struct has_method_##member<_Klass, _Return(_Args...)>                          \
               >::type;                                                         \
 };
 
-// Generate the above structure for the following list of methods:
-GENERATE_HAS_MEMBER_METHOD(simpleMethod)
-GENERATE_HAS_MEMBER_METHOD(cachedMethod)
-
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
@@ -177,6 +173,8 @@ GENERATE_HAS_MEMBER_METHOD(cachedMethod)
 /*============================================================================*/
 
 #define GENERATE_METHOD_DELEGATOR(interface, implementation)                   \
+                                                                               \
+GENERATE_HAS_MEMBER_METHOD(implementation)                                     \
                                                                                \
 template<typename... Args>                                                     \
 auto interface##Impl(no_##implementation##_tag, Args... args) const            \
