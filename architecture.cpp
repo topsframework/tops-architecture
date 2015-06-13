@@ -165,6 +165,65 @@ GENERATE_HAS_MEMBER_METHOD(cachedMethod)
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
+                                MEMBER DELEGATOR
+ -------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+*/
+
+/*============================================================================*/
+/*                         MEMBER DELEGATOR GENERATION                        */
+/*============================================================================*/
+
+#define GENERATE_METHOD_DELEGATOR(interface, implementation)                   \
+                                                                               \
+template<typename... Args>                                                     \
+auto interface##Impl(no_##implementation##_tag, Args... args) const            \
+    -> decltype(this->interface(args...)) {                                    \
+  static_assert(is_base, "Class don't have method 'implementation'!");         \
+  throw std::logic_error("Calling from base class with no 'implementation'");  \
+}                                                                              \
+                                                                               \
+template<typename... Args>                                                     \
+auto interface##Impl(has_##implementation##_tag, Args... args) const           \
+    -> decltype(this->interface(args...)) {                                    \
+                                                                               \
+  using Klass = typename std::remove_cv<                                       \
+    typename std::remove_pointer<decltype(this)>::type>::type;                 \
+                                                                               \
+  return _m->implementation(                                                   \
+    std::static_pointer_cast<Klass>(                                           \
+      const_cast<Klass*>(this)->shared_from_this()),                           \
+    std::forward<Args>(args)...);                                              \
+}
+
+/*============================================================================*/
+/*                           MEMBER DELEGATOR CALL                            */
+/*============================================================================*/
+
+template<typename Ptr, typename Dummy> struct inject_first_parameter;
+
+template<typename Ptr, typename Klass, typename Result, typename... Args>
+struct inject_first_parameter<Ptr, Result(Klass::*)(Args...)> {
+  using type = Result(Ptr, Args...);
+};
+
+template<typename Ptr, typename Klass, typename Result, typename... Args>
+struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
+  using type = const Result(Ptr, Args...);
+};
+
+#define CALL_METHOD_DELEGATOR(interface, implementation)                       \
+                                                                               \
+using Klass = typename std::remove_cv<                                         \
+  typename std::remove_pointer<decltype(this)>::type>::type;                   \
+using MethodType = typename inject_first_parameter<                            \
+  std::shared_ptr<Klass>, decltype(&Klass::interface)>::type;                  \
+                                                                               \
+interface##Impl(typename has_method_##implementation<M, MethodType>::tag());
+
+/*
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+ -------------------------------------------------------------------------------
                                  COMMON CLASSES
  -------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +265,7 @@ template<typename T>
 class Foo : public std::enable_shared_from_this<Foo<T>> {
  public:
   // Virtual methods
-  virtual void method() = 0;
+  virtual void method() const = 0;
 };
 
 /* CLASS SimpleFoo ************************************************************/
@@ -231,39 +290,22 @@ class SimpleFoo
   // Alias
   using MPtr = std::shared_ptr<M>;
 
-  using Self = SimpleFoo<T, M>;
-  using SelfPtr = std::shared_ptr<Self>;
-
   // Constructor
   SimpleFoo(MPtr m = MPtr())
       : _m(std::move(m)) {
   }
 
  public:
-
   // Overriden methods
-  void method() override {
-    methodImpl(typename has_method_simpleMethod<M, const void(SelfPtr)>::tag());
+  void method() const override {
+    CALL_METHOD_DELEGATOR(method, simpleMethod)
   }
 
  private:
   // Instance variables
   MPtr _m;
 
-  // Concrete methods
-  void methodImpl(no_simpleMethod_tag) {
-    static_assert(is_base, "Class don't have method 'simpleMethod'!");
-    throw std::logic_error("Calling from base class with no 'simpleMethod'");
-  }
-
-  void methodImpl(has_simpleMethod_tag) {
-    _m->simpleMethod(make_shared());
-  }
-
-  SimpleFooPtr<T, M> make_shared() {
-    return std::static_pointer_cast<SimpleFoo<T, M>>(
-      this->shared_from_this());
-  }
+  GENERATE_METHOD_DELEGATOR(method, simpleMethod)
 };
 
 /* CLASS CachedFoo ************************************************************/
@@ -289,17 +331,14 @@ class CachedFoo
   using MPtr = std::shared_ptr<M>;
   using Cache = typename M::Cache;
 
-  using Self = CachedFoo<T, M>;
-  using SelfPtr = std::shared_ptr<Self>;
-
   // Constructor
   CachedFoo(MPtr m = MPtr(), Cache cache = Cache())
       : _m(std::move(m)), _cache(std::move(cache)) {
   }
 
   // Overriden methods
-  void method() override {
-    methodImpl(typename has_method_cachedMethod<M, const void(SelfPtr)>::tag());
+  void method() const override {
+    CALL_METHOD_DELEGATOR(method, cachedMethod)
   }
 
   // Concrete methods
@@ -312,20 +351,7 @@ class CachedFoo
   MPtr _m;
   Cache _cache;
 
-  // Concrete methods
-  void methodImpl(no_cachedMethod_tag) {
-    static_assert(is_base, "Class don't have method 'cachedMethod'!");
-    throw std::logic_error("Calling from base class with no 'cachedMethod'");
-  }
-
-  void methodImpl(has_cachedMethod_tag) {
-    _m->cachedMethod(make_shared());
-  }
-
-  CachedFooPtr<T, M> make_shared() {
-    return std::static_pointer_cast<CachedFoo<T, M>>(
-      this->shared_from_this());
-  }
+  GENERATE_METHOD_DELEGATOR(method, cachedMethod)
 };
 
 /*
