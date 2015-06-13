@@ -168,6 +168,11 @@ struct has_method_##member<_Klass, _Return(_Args...)>                          \
 ////////////////////////////////////////////////////////////////////////////////
 */
 
+// Thase macros are aimed to avoid replication of code when creating new
+// methods for a given front-end. They require almost no knowledge about
+// the front end class, but  that the front-end superclass -end inherits
+// from std::enable_shared_from_this.
+
 /*============================================================================*/
 /*                         MEMBER DELEGATOR GENERATION                        */
 /*============================================================================*/
