@@ -193,7 +193,7 @@ struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
 /*                         MEMBER DELEGATOR GENERATION                        */
 /*============================================================================*/
 
-#define GENERATE_METHOD_DELEGATOR(interface, implementation)                   \
+#define GENERATE_METHOD_DELEGATOR(interface, implementation, delegatedObject)  \
                                                                                \
 GENERATE_HAS_MEMBER_METHOD(implementation);                                    \
                                                                                \
@@ -211,7 +211,7 @@ auto interface##Impl(has_##implementation##_tag, Args... args) const           \
   using Klass = typename std::remove_cv<                                       \
     typename std::remove_pointer<decltype(this)>::type>::type;                 \
                                                                                \
-  return _m->implementation(                                                   \
+  return (delegatedObject)->implementation(                                    \
     std::static_pointer_cast<Klass>(                                           \
       const_cast<Klass*>(this)->shared_from_this()),                           \
     std::forward<Args>(args)...);                                              \
@@ -221,14 +221,18 @@ auto interface##Impl(has_##implementation##_tag, Args... args) const           \
 /*                           MEMBER DELEGATOR CALL                            */
 /*============================================================================*/
 
-#define CALL_METHOD_DELEGATOR(interface, implementation)                       \
+#define CALL_METHOD_DELEGATOR(interface, implementation, delegatedObject)      \
 do {                                                                           \
   using Klass = typename std::remove_cv<                                       \
     typename std::remove_pointer<decltype(this)>::type>::type;                 \
   using MethodType = typename inject_first_parameter<                          \
     std::shared_ptr<Klass>, decltype(&Klass::interface)>::type;                \
                                                                                \
-  interface##Impl(typename has_method_##implementation<M, MethodType>::tag()); \
+  using DelegatedType = typename std::remove_cv<                               \
+    typename std::remove_pointer<decltype(delegatedObject)>::type>::type;      \
+                                                                               \
+  interface##Impl(typename has_method_##implementation<                        \
+                    typename DelegatedType::element_type, MethodType>::tag()); \
 } while (false)
 
 /*
@@ -308,14 +312,14 @@ class SimpleFoo
  public:
   // Overriden methods
   void method() const override {
-    CALL_METHOD_DELEGATOR(method, simpleMethod);
+    CALL_METHOD_DELEGATOR(method, simpleMethod, _m);
   }
 
  private:
   // Instance variables
   MPtr _m;
 
-  GENERATE_METHOD_DELEGATOR(method, simpleMethod)
+  GENERATE_METHOD_DELEGATOR(method, simpleMethod, _m)
 };
 
 /* CLASS CachedFoo ************************************************************/
@@ -348,7 +352,7 @@ class CachedFoo
 
   // Overriden methods
   void method() const override {
-    CALL_METHOD_DELEGATOR(method, cachedMethod);
+    CALL_METHOD_DELEGATOR(method, cachedMethod, _m);
   }
 
   // Concrete methods
@@ -361,7 +365,7 @@ class CachedFoo
   MPtr _m;
   Cache _cache;
 
-  GENERATE_METHOD_DELEGATOR(method, cachedMethod)
+  GENERATE_METHOD_DELEGATOR(method, cachedMethod, _m)
 };
 
 /*
