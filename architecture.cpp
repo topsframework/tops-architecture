@@ -174,6 +174,22 @@ struct has_method_##member<_Klass, _Return(_Args...)>                          \
 // from std::enable_shared_from_this.
 
 /*============================================================================*/
+/*                          FIRST PARAMETER INJECTION                         */
+/*============================================================================*/
+
+template<typename Ptr, typename Dummy> struct inject_first_parameter;
+
+template<typename Ptr, typename Klass, typename Result, typename... Args>
+struct inject_first_parameter<Ptr, Result(Klass::*)(Args...)> {
+  using type = Result(Ptr, Args...);
+};
+
+template<typename Ptr, typename Klass, typename Result, typename... Args>
+struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
+  using type = const Result(Ptr, Args...);
+};
+
+/*============================================================================*/
 /*                         MEMBER DELEGATOR GENERATION                        */
 /*============================================================================*/
 
@@ -204,18 +220,6 @@ auto interface##Impl(has_##implementation##_tag, Args... args) const           \
 /*============================================================================*/
 /*                           MEMBER DELEGATOR CALL                            */
 /*============================================================================*/
-
-template<typename Ptr, typename Dummy> struct inject_first_parameter;
-
-template<typename Ptr, typename Klass, typename Result, typename... Args>
-struct inject_first_parameter<Ptr, Result(Klass::*)(Args...)> {
-  using type = Result(Ptr, Args...);
-};
-
-template<typename Ptr, typename Klass, typename Result, typename... Args>
-struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
-  using type = const Result(Ptr, Args...);
-};
 
 #define CALL_METHOD_DELEGATOR(interface, implementation)                       \
 do {                                                                           \
