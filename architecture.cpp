@@ -218,13 +218,14 @@ struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
 };
 
 #define CALL_METHOD_DELEGATOR(interface, implementation)                       \
+do {                                                                           \
+  using Klass = typename std::remove_cv<                                       \
+    typename std::remove_pointer<decltype(this)>::type>::type;                 \
+  using MethodType = typename inject_first_parameter<                          \
+    std::shared_ptr<Klass>, decltype(&Klass::interface)>::type;                \
                                                                                \
-using Klass = typename std::remove_cv<                                         \
-  typename std::remove_pointer<decltype(this)>::type>::type;                   \
-using MethodType = typename inject_first_parameter<                            \
-  std::shared_ptr<Klass>, decltype(&Klass::interface)>::type;                  \
-                                                                               \
-interface##Impl(typename has_method_##implementation<M, MethodType>::tag());
+  interface##Impl(typename has_method_##implementation<M, MethodType>::tag()); \
+} while (false)
 
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -303,7 +304,7 @@ class SimpleFoo
  public:
   // Overriden methods
   void method() const override {
-    CALL_METHOD_DELEGATOR(method, simpleMethod)
+    CALL_METHOD_DELEGATOR(method, simpleMethod);
   }
 
  private:
@@ -343,7 +344,7 @@ class CachedFoo
 
   // Overriden methods
   void method() const override {
-    CALL_METHOD_DELEGATOR(method, cachedMethod)
+    CALL_METHOD_DELEGATOR(method, cachedMethod);
   }
 
   // Concrete methods
