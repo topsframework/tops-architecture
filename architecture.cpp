@@ -14,6 +14,7 @@
 
 // Standard headers
 #include <memory>
+#include <string>
 #include <iostream>
 #include <exception>
 #include <type_traits>
@@ -280,7 +281,7 @@ template<typename T>
 class Foo : public std::enable_shared_from_this<Foo<T>> {
  public:
   // Virtual methods
-  virtual void method() const = 0;
+  virtual void method(const std::string &msg = "") const = 0;
 };
 
 /* CLASS SimpleFoo ************************************************************/
@@ -312,8 +313,8 @@ class SimpleFoo
 
  public:
   // Overriden methods
-  void method() const override {
-    CALL_METHOD_DELEGATOR(method, simpleMethod, _m);
+  void method(const std::string &msg) const override {
+    CALL_METHOD_DELEGATOR(method, simpleMethod, _m, msg);
   }
 
  private:
@@ -352,8 +353,8 @@ class CachedFoo
   }
 
   // Overriden methods
-  void method() const override {
-    CALL_METHOD_DELEGATOR(method, cachedMethod, _m);
+  void method(const std::string &msg) const override {
+    CALL_METHOD_DELEGATOR(method, cachedMethod, _m, msg);
   }
 
   // Concrete methods
@@ -466,23 +467,36 @@ class BarCrtp : public Bar {
     return std::make_shared<SimpleFoo<Spot, Derived>>(make_shared());
   }
 
-  // Virtual methods
-  virtual void simpleMethod(SimpleFooPtr<Target, Derived> simpleFoo) const {
-    std::cout << "Running simple for Target in BarCrtp" << std::endl;
+  void messageBroadcast(const std::string& msg) const {
+    if (!msg.empty())
+      std::cout << "Transmiting message: " << msg << std::endl;
   }
 
-  virtual void cachedMethod(CachedFooPtr<Target, Derived> cachedFoo) const {
+  // Virtual methods
+  virtual void simpleMethod(SimpleFooPtr<Target, Derived> simpleFoo,
+                            const std::string &msg) const {
+    std::cout << "Running simple for Target in BarCrtp" << std::endl;
+    messageBroadcast(msg);
+  }
+
+  virtual void cachedMethod(CachedFooPtr<Target, Derived> cachedFoo,
+                            const std::string &msg) const {
     std::cout << "Running cached for Target in BarCrtp" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+    messageBroadcast(msg);
   }
 
-  virtual void simpleMethod(SimpleFooPtr<Spot, Derived> simpleFoo) const {
+  virtual void simpleMethod(SimpleFooPtr<Spot, Derived> simpleFoo,
+                            const std::string &msg) const {
     std::cout << "Running simple for Spot in BarCrtp" << std::endl;
+    messageBroadcast(msg);
   }
 
-  virtual void cachedMethod(CachedFooPtr<Spot, Derived> cachedFoo) const {
+  virtual void cachedMethod(CachedFooPtr<Spot, Derived> cachedFoo,
+                            const std::string &msg) const {
     std::cout << "Running cached for Spot in BarCrtp" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+    messageBroadcast(msg);
   }
 
  private:
@@ -510,22 +524,30 @@ class BarDerived : public BarCrtp<BarDerived> {
   using Cache = double;
 
   // Overriden methods
-  void simpleMethod(SimpleFooPtr<Target, BarDerived> simpleFoo) const override {
+  void simpleMethod(SimpleFooPtr<Target, BarDerived> simpleFoo,
+                    const std::string &msg) const override {
     std::cout << "Running simple for Target in BarDerived" << std::endl;
+    messageBroadcast(msg);
   }
 
-  void cachedMethod(CachedFooPtr<Target, BarDerived> cachedFoo) const override {
+  void cachedMethod(CachedFooPtr<Target, BarDerived> cachedFoo,
+                    const std::string &msg) const override {
     std::cout << "Running cached for Target in BarDerived" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+    messageBroadcast(msg);
   }
 
-  void simpleMethod(SimpleFooPtr<Spot, BarDerived> simpleFoo) const override {
+  void simpleMethod(SimpleFooPtr<Spot, BarDerived> simpleFoo,
+                    const std::string &msg) const override {
     std::cout << "Running simple for Spot in BarDerived" << std::endl;
+    messageBroadcast(msg);
   }
 
-  void cachedMethod(CachedFooPtr<Spot, BarDerived> cachedFoo) const override {
+  void cachedMethod(CachedFooPtr<Spot, BarDerived> cachedFoo,
+                    const std::string &msg) const override {
     std::cout << "Running cached for Spot in BarDerived" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+    messageBroadcast(msg);
   }
 };
 
