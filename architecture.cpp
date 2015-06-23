@@ -221,7 +221,7 @@ auto interface##Impl(has_##implementation##_tag, Args... args) const           \
 /*                           MEMBER DELEGATOR CALL                            */
 /*============================================================================*/
 
-#define CALL_METHOD_DELEGATOR(interface, implementation, delegatedObject)      \
+#define CALL_METHOD_DELEGATOR(interface, implementation, delegatedObject, ...) \
 do {                                                                           \
   using Klass = typename std::remove_cv<                                       \
     typename std::remove_pointer<decltype(this)>::type>::type;                 \
@@ -232,7 +232,8 @@ do {                                                                           \
     typename std::remove_pointer<decltype(delegatedObject)>::type>::type;      \
                                                                                \
   interface##Impl(typename has_method_##implementation<                        \
-                    typename DelegatedType::element_type, MethodType>::tag()); \
+                    typename DelegatedType::element_type, MethodType>::tag(),  \
+                  ##__VA_ARGS__);                                              \
 } while (false)
 
 /*
