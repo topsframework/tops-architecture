@@ -158,7 +158,7 @@ struct has_method_##member<_Klass, _Return(_Args...)>                          \
                 has_method_##member<_Klass, _Return(_Args...)>::value,         \
                 has_##member##_tag, no_##member##_tag                          \
               >::type;                                                         \
-};
+}
 
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -179,7 +179,7 @@ struct has_method_##member<_Klass, _Return(_Args...)>                          \
 
 #define GENERATE_METHOD_DELEGATOR(interface, implementation)                   \
                                                                                \
-GENERATE_HAS_MEMBER_METHOD(implementation)                                     \
+GENERATE_HAS_MEMBER_METHOD(implementation);                                    \
                                                                                \
 template<typename... Args>                                                     \
 auto interface##Impl(no_##implementation##_tag, Args... args) const            \
