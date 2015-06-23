@@ -76,7 +76,7 @@ struct has_type_##member                                                       \
                 has_type_##member<_Klass, _Type>::value,                       \
                 has_##member##_tag, no_##member##_tag                          \
               >::type;                                                         \
-};
+}
 
 /*============================================================================*/
 /*                           MEMBER METHOD DETECTOR                           */
