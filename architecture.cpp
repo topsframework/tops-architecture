@@ -217,10 +217,34 @@ inline auto method##Impl(Args... args) const                                   \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
+inline auto method##Impl(Args... args)                                         \
+    -> decltype(this->method(args...)) {                                       \
+                                                                               \
+  using Klass = typename std::remove_cv<                                       \
+    typename std::remove_pointer<decltype(this)>::type>::type;                 \
+                                                                               \
+  return const_cast<decltype(this->method(args...))>(                          \
+    static_cast<const Klass *>(this)->method##Impl(                            \
+      std::forward<Args>(args)...));                                           \
+}                                                                              \
+                                                                               \
+template<typename... Args>                                                     \
 inline auto method##Impl(no_##method##_tag, Args... args) const                \
     -> decltype(this->method(args...)) {                                       \
   static_assert(is_base, "Class don't have method 'method'!");                 \
   throw std::logic_error("Calling from base class with no 'method'");          \
+}                                                                              \
+                                                                               \
+template<typename... Args>                                                     \
+inline auto method##Impl(no_##method##_tag, Args... args)                      \
+    -> decltype(this->method(args...)) {                                       \
+                                                                               \
+  using Klass = typename std::remove_cv<                                       \
+    typename std::remove_pointer<decltype(this)>::type>::type;                 \
+                                                                               \
+  return const_cast<decltype(this->method(args...))>(                          \
+    static_cast<const Klass *>(this)->method##Impl(                            \
+      no_##method##_tag(), std::forward<Args>(args)...));                      \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
@@ -234,6 +258,18 @@ inline auto method##Impl(has_##method##_tag, Args... args) const               \
     std::static_pointer_cast<Klass>(                                           \
       const_cast<Klass*>(this)->shared_from_this()),                           \
     std::forward<Args>(args)...);                                              \
+}                                                                              \
+                                                                               \
+template<typename... Args>                                                     \
+inline auto method##Impl(has_##method##_tag, Args... args)                     \
+    -> decltype(this->method(args...)) {                                       \
+                                                                               \
+  using Klass = typename std::remove_cv<                                       \
+    typename std::remove_pointer<decltype(this)>::type>::type;                 \
+                                                                               \
+  return const_cast<decltype(this->method(args...))>(                          \
+    static_cast<const Klass *>(this)->method##Impl(                            \
+      has_##method##_tag(), std::forward<Args>(args)...));                     \
 }
 
 /*============================================================================*/
