@@ -199,14 +199,32 @@ struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
 GENERATE_HAS_MEMBER_METHOD(implementation);                                    \
                                                                                \
 template<typename... Args>                                                     \
-auto interface##Impl(no_##implementation##_tag, Args... args) const            \
+inline auto interface##Impl(Args... args) const                                \
+    -> decltype(this->interface(args...)) {                                    \
+                                                                               \
+  using Klass = typename std::remove_cv<                                       \
+    typename std::remove_pointer<decltype(this)>::type>::type;                 \
+  using MethodType = typename inject_first_parameter<                          \
+    std::shared_ptr<Klass>, decltype(&Klass::interface)>::type;                \
+                                                                               \
+  using DelegatedType = typename std::remove_cv<                               \
+    typename std::remove_pointer<decltype(delegatedObject)>::type>::type;      \
+                                                                               \
+  return interface##Impl(                                                      \
+    typename has_method_##implementation<                                      \
+      typename DelegatedType::element_type, MethodType>::tag(),                \
+    std::forward<Args>(args)...);                                              \
+}                                                                              \
+                                                                               \
+template<typename... Args>                                                     \
+inline auto interface##Impl(no_##implementation##_tag, Args... args) const     \
     -> decltype(this->interface(args...)) {                                    \
   static_assert(is_base, "Class don't have method 'implementation'!");         \
   throw std::logic_error("Calling from base class with no 'implementation'");  \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
-auto interface##Impl(has_##implementation##_tag, Args... args) const           \
+inline auto interface##Impl(has_##implementation##_tag, Args... args) const    \
     -> decltype(this->interface(args...)) {                                    \
                                                                                \
   using Klass = typename std::remove_cv<                                       \
@@ -223,19 +241,7 @@ auto interface##Impl(has_##implementation##_tag, Args... args) const           \
 /*============================================================================*/
 
 #define CALL_METHOD_DELEGATOR(interface, implementation, delegatedObject, ...) \
-do {                                                                           \
-  using Klass = typename std::remove_cv<                                       \
-    typename std::remove_pointer<decltype(this)>::type>::type;                 \
-  using MethodType = typename inject_first_parameter<                          \
-    std::shared_ptr<Klass>, decltype(&Klass::interface)>::type;                \
-                                                                               \
-  using DelegatedType = typename std::remove_cv<                               \
-    typename std::remove_pointer<decltype(delegatedObject)>::type>::type;      \
-                                                                               \
-  interface##Impl(typename has_method_##implementation<                        \
-                    typename DelegatedType::element_type, MethodType>::tag(),  \
-                  ##__VA_ARGS__);                                              \
-} while (false)
+do { return interface##Impl(__VA_ARGS__); } while (false)
 
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
