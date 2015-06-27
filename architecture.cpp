@@ -4,11 +4,11 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//                               foo->method()                                //
+//                             foo->method(msg)                               //
 //                                    \/                                      //
-//                             foo->methodImpl()                              //
+//                           foo->methodImpl(msg)                             //
 //                                    \/                                      //
-//                          model->simpleMethod(Foo)                          //
+//                          model->method(Foo, msg)                           //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -194,43 +194,43 @@ struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
 /*                         MEMBER DELEGATOR GENERATION                        */
 /*============================================================================*/
 
-#define GENERATE_METHOD_DELEGATOR(interface, implementation, delegatedObject)  \
+#define GENERATE_METHOD_DELEGATOR(method, delegatedObject)                     \
                                                                                \
-GENERATE_HAS_MEMBER_METHOD(implementation);                                    \
+GENERATE_HAS_MEMBER_METHOD(method);                                            \
                                                                                \
 template<typename... Args>                                                     \
-inline auto interface##Impl(Args... args) const                                \
-    -> decltype(this->interface(args...)) {                                    \
+inline auto method##Impl(Args... args) const                                   \
+    -> decltype(this->method(args...)) {                                       \
                                                                                \
   using Klass = typename std::remove_cv<                                       \
     typename std::remove_pointer<decltype(this)>::type>::type;                 \
   using MethodType = typename inject_first_parameter<                          \
-    std::shared_ptr<Klass>, decltype(&Klass::interface)>::type;                \
+    std::shared_ptr<Klass>, decltype(&Klass::method)>::type;                   \
                                                                                \
   using DelegatedType = typename std::remove_cv<                               \
     typename std::remove_pointer<decltype(delegatedObject)>::type>::type;      \
                                                                                \
-  return interface##Impl(                                                      \
-    typename has_method_##implementation<                                      \
+  return method##Impl(                                                         \
+    typename has_method_##method<                                              \
       typename DelegatedType::element_type, MethodType>::tag(),                \
     std::forward<Args>(args)...);                                              \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
-inline auto interface##Impl(no_##implementation##_tag, Args... args) const     \
-    -> decltype(this->interface(args...)) {                                    \
-  static_assert(is_base, "Class don't have method 'implementation'!");         \
-  throw std::logic_error("Calling from base class with no 'implementation'");  \
+inline auto method##Impl(no_##method##_tag, Args... args) const                \
+    -> decltype(this->method(args...)) {                                       \
+  static_assert(is_base, "Class don't have method 'method'!");                 \
+  throw std::logic_error("Calling from base class with no 'method'");          \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
-inline auto interface##Impl(has_##implementation##_tag, Args... args) const    \
-    -> decltype(this->interface(args...)) {                                    \
+inline auto method##Impl(has_##method##_tag, Args... args) const               \
+    -> decltype(this->method(args...)) {                                       \
                                                                                \
   using Klass = typename std::remove_cv<                                       \
     typename std::remove_pointer<decltype(this)>::type>::type;                 \
                                                                                \
-  return (delegatedObject)->implementation(                                    \
+  return (delegatedObject)->method(                                            \
     std::static_pointer_cast<Klass>(                                           \
       const_cast<Klass*>(this)->shared_from_this()),                           \
     std::forward<Args>(args)...);                                              \
@@ -240,8 +240,8 @@ inline auto interface##Impl(has_##implementation##_tag, Args... args) const    \
 /*                           MEMBER DELEGATOR CALL                            */
 /*============================================================================*/
 
-#define CALL_METHOD_DELEGATOR(interface, implementation, delegatedObject, ...) \
-do { return interface##Impl(__VA_ARGS__); } while (false)
+#define CALL_METHOD_DELEGATOR(method, delegatedObject, ...)                    \
+do { return method##Impl(__VA_ARGS__); } while (false)
 
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -320,14 +320,14 @@ class SimpleFoo
  public:
   // Overriden methods
   void method(const std::string &msg) const override {
-    CALL_METHOD_DELEGATOR(method, simpleMethod, _m, msg);
+    CALL_METHOD_DELEGATOR(method, _m, msg);
   }
 
  private:
   // Instance variables
   MPtr _m;
 
-  GENERATE_METHOD_DELEGATOR(method, simpleMethod, _m)
+  GENERATE_METHOD_DELEGATOR(method, _m)
 };
 
 /* CLASS CachedFoo ************************************************************/
@@ -360,7 +360,7 @@ class CachedFoo
 
   // Overriden methods
   void method(const std::string &msg) const override {
-    CALL_METHOD_DELEGATOR(method, cachedMethod, _m, msg);
+    CALL_METHOD_DELEGATOR(method, _m, msg);
   }
 
   // Concrete methods
@@ -373,7 +373,7 @@ class CachedFoo
   MPtr _m;
   Cache _cache;
 
-  GENERATE_METHOD_DELEGATOR(method, cachedMethod, _m)
+  GENERATE_METHOD_DELEGATOR(method, _m)
 };
 
 /*
@@ -479,27 +479,27 @@ class BarCrtp : public Bar {
   }
 
   // Virtual methods
-  virtual void simpleMethod(SimpleFooPtr<Target, Derived> simpleFoo,
-                            const std::string &msg) const {
+  virtual void method(SimpleFooPtr<Target, Derived> simpleFoo,
+                      const std::string &msg) const {
     std::cout << "Running simple for Target in BarCrtp" << std::endl;
     messageBroadcast(msg);
   }
 
-  virtual void cachedMethod(CachedFooPtr<Target, Derived> cachedFoo,
-                            const std::string &msg) const {
+  virtual void method(CachedFooPtr<Target, Derived> cachedFoo,
+                      const std::string &msg) const {
     std::cout << "Running cached for Target in BarCrtp" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
     messageBroadcast(msg);
   }
 
-  virtual void simpleMethod(SimpleFooPtr<Spot, Derived> simpleFoo,
-                            const std::string &msg) const {
+  virtual void method(SimpleFooPtr<Spot, Derived> simpleFoo,
+                      const std::string &msg) const {
     std::cout << "Running simple for Spot in BarCrtp" << std::endl;
     messageBroadcast(msg);
   }
 
-  virtual void cachedMethod(CachedFooPtr<Spot, Derived> cachedFoo,
-                            const std::string &msg) const {
+  virtual void method(CachedFooPtr<Spot, Derived> cachedFoo,
+                      const std::string &msg) const {
     std::cout << "Running cached for Spot in BarCrtp" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
     messageBroadcast(msg);
@@ -530,27 +530,27 @@ class BarDerived : public BarCrtp<BarDerived> {
   using Cache = double;
 
   // Overriden methods
-  void simpleMethod(SimpleFooPtr<Target, BarDerived> simpleFoo,
-                    const std::string &msg) const override {
+  void method(SimpleFooPtr<Target, BarDerived> simpleFoo,
+              const std::string &msg) const override {
     std::cout << "Running simple for Target in BarDerived" << std::endl;
     messageBroadcast(msg);
   }
 
-  void cachedMethod(CachedFooPtr<Target, BarDerived> cachedFoo,
-                    const std::string &msg) const override {
+  void method(CachedFooPtr<Target, BarDerived> cachedFoo,
+              const std::string &msg) const override {
     std::cout << "Running cached for Target in BarDerived" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
     messageBroadcast(msg);
   }
 
-  void simpleMethod(SimpleFooPtr<Spot, BarDerived> simpleFoo,
-                    const std::string &msg) const override {
+  void method(SimpleFooPtr<Spot, BarDerived> simpleFoo,
+              const std::string &msg) const override {
     std::cout << "Running simple for Spot in BarDerived" << std::endl;
     messageBroadcast(msg);
   }
 
-  void cachedMethod(CachedFooPtr<Spot, BarDerived> cachedFoo,
-                    const std::string &msg) const override {
+  void method(CachedFooPtr<Spot, BarDerived> cachedFoo,
+              const std::string &msg) const override {
     std::cout << "Running cached for Spot in BarDerived" << std::endl;
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
     messageBroadcast(msg);
