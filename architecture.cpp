@@ -175,6 +175,20 @@ struct has_method_##member<_Klass, _Return(_Args...)>                          \
 // from std::enable_shared_from_this.
 
 /*============================================================================*/
+/*                              CLASS OF POINTER                              */
+/*============================================================================*/
+
+template<typename T> struct class_of;
+
+template<typename T> struct class_of<T*> {
+  using type = typename std::remove_cv<
+    typename std::remove_pointer<T*>::type>::type;
+};
+
+template<typename T>
+using class_of_t = typename class_of<T>::type;
+
+/*============================================================================*/
 /*                          FIRST PARAMETER INJECTION                         */
 /*============================================================================*/
 
@@ -202,29 +216,25 @@ template<typename... Args>                                                     \
 inline auto method##Impl(Args... args) const                                   \
     -> decltype(this->method(args...)) {                                       \
                                                                                \
-  using Klass = typename std::remove_cv<                                       \
-    typename std::remove_pointer<decltype(this)>::type>::type;                 \
   using MethodType = typename inject_first_parameter<                          \
-    std::shared_ptr<Klass>, decltype(&Klass::method)>::type;                   \
+    std::shared_ptr<class_of_t<decltype(this)>>,                               \
+    decltype(&class_of_t<decltype(this)>::method)                              \
+  >::type;                                                                     \
                                                                                \
   using DelegatedType = typename std::remove_cv<                               \
-    typename std::remove_pointer<decltype(delegatedObject)>::type>::type;      \
+    typename std::remove_pointer<decltype(delegatedObject)>::type              \
+  >::type::element_type;                                                       \
                                                                                \
   return method##Impl(                                                         \
-    typename has_method_##method<                                              \
-      typename DelegatedType::element_type, MethodType>::tag(),                \
+    typename has_method_##method<DelegatedType, MethodType>::tag(),            \
     std::forward<Args>(args)...);                                              \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
 inline auto method##Impl(Args... args)                                         \
     -> decltype(this->method(args...)) {                                       \
-                                                                               \
-  using Klass = typename std::remove_cv<                                       \
-    typename std::remove_pointer<decltype(this)>::type>::type;                 \
-                                                                               \
   return const_cast<decltype(this->method(args...))>(                          \
-    static_cast<const Klass *>(this)->method##Impl(                            \
+    static_cast<const class_of_t<decltype(this)> *>(this)->method##Impl(       \
       std::forward<Args>(args)...));                                           \
 }                                                                              \
                                                                                \
@@ -238,37 +248,25 @@ inline auto method##Impl(no_##method##_tag, Args... args) const                \
 template<typename... Args>                                                     \
 inline auto method##Impl(no_##method##_tag, Args... args)                      \
     -> decltype(this->method(args...)) {                                       \
-                                                                               \
-  using Klass = typename std::remove_cv<                                       \
-    typename std::remove_pointer<decltype(this)>::type>::type;                 \
-                                                                               \
   return const_cast<decltype(this->method(args...))>(                          \
-    static_cast<const Klass *>(this)->method##Impl(                            \
+    static_cast<const class_of_t<decltype(this)>*>(this)->method##Impl(        \
       no_##method##_tag(), std::forward<Args>(args)...));                      \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
 inline auto method##Impl(has_##method##_tag, Args... args) const               \
     -> decltype(this->method(args...)) {                                       \
-                                                                               \
-  using Klass = typename std::remove_cv<                                       \
-    typename std::remove_pointer<decltype(this)>::type>::type;                 \
-                                                                               \
   return (delegatedObject)->method(                                            \
-    std::static_pointer_cast<Klass>(                                           \
-      const_cast<Klass*>(this)->shared_from_this()),                           \
+    std::static_pointer_cast<class_of_t<decltype(this)>>(                      \
+      const_cast<class_of_t<decltype(this)>*>(this)->shared_from_this()),      \
     std::forward<Args>(args)...);                                              \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
 inline auto method##Impl(has_##method##_tag, Args... args)                     \
     -> decltype(this->method(args...)) {                                       \
-                                                                               \
-  using Klass = typename std::remove_cv<                                       \
-    typename std::remove_pointer<decltype(this)>::type>::type;                 \
-                                                                               \
   return const_cast<decltype(this->method(args...))>(                          \
-    static_cast<const Klass *>(this)->method##Impl(                            \
+    static_cast<const class_of_t<decltype(this)>*>(this)->method##Impl(        \
       has_##method##_tag(), std::forward<Args>(args)...));                     \
 }
 
