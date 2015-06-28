@@ -175,6 +175,16 @@ struct has_method_##member<_Klass, _Return(_Args...)>                          \
 // from std::enable_shared_from_this.
 
 /*============================================================================*/
+/*                           LATE EVALUATED BOOLEANS                          */
+/*============================================================================*/
+
+template<typename T>
+struct always_true : public std::integral_constant<bool, true> {};
+
+template<typename T>
+struct always_false : public std::integral_constant<bool, false> {};
+
+/*============================================================================*/
 /*                              CLASS OF POINTER                              */
 /*============================================================================*/
 
