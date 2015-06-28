@@ -285,7 +285,7 @@ inline auto method##Impl(has_##method##_tag, Args... args)                     \
 /*                           MEMBER DELEGATOR CALL                            */
 /*============================================================================*/
 
-#define CALL_METHOD_DELEGATOR(method, delegatedObject, ...)                    \
+#define CALL_METHOD_DELEGATOR(method, ...)                                     \
 do { return method##Impl(__VA_ARGS__); } while (false)
 
 /*
@@ -363,7 +363,7 @@ class SimpleFoo : public Foo<T> {
  public:
   // Overriden methods
   void method(const std::string &msg) const override {
-    CALL_METHOD_DELEGATOR(method, _m, msg);
+    CALL_METHOD_DELEGATOR(method, msg);
   }
 
  private:
@@ -401,7 +401,7 @@ class CachedFoo : public Foo<T> {
 
   // Overriden methods
   void method(const std::string &msg) const override {
-    CALL_METHOD_DELEGATOR(method, _m, msg);
+    CALL_METHOD_DELEGATOR(method, msg);
   }
 
   // Concrete methods
