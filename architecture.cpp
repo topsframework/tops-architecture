@@ -232,7 +232,7 @@ inline auto method##Impl(Args... args) const                                   \
   >::type;                                                                     \
                                                                                \
   using DelegatedType = typename std::remove_cv<                               \
-    typename std::remove_pointer<decltype(delegatedObject)>::type              \
+    typename std::remove_pointer<decltype(this->delegatedObject)>::type        \
   >::type::element_type;                                                       \
                                                                                \
   return method##Impl(                                                         \
@@ -267,7 +267,7 @@ inline auto method##Impl(no_##method##_tag, Args... args)                      \
 template<typename... Args>                                                     \
 inline auto method##Impl(has_##method##_tag, Args... args) const               \
     -> decltype(this->method(args...)) {                                       \
-  return (delegatedObject)->method(                                            \
+  return (this->delegatedObject)->method(                                      \
     std::static_pointer_cast<class_of_t<decltype(this)>>(                      \
       const_cast<class_of_t<decltype(this)>*>(this)->shared_from_this()),      \
     std::forward<Args>(args)...);                                              \
@@ -360,16 +360,16 @@ class SimpleFoo : public Foo<T> {
       : _m(std::move(m)) {
   }
 
- public:
   // Overriden methods
   void method(const std::string &msg) const override {
     CALL_METHOD_DELEGATOR(method, msg);
   }
 
- private:
+ protected:
   // Instance variables
   MPtr _m;
 
+ private:
   GENERATE_METHOD_DELEGATOR(method, _m)
 };
 
@@ -388,7 +388,7 @@ using CachedFooPtr = std::shared_ptr<CachedFoo<T, M>>;
  * Cached implementation of Foo front-end
  */
 template<typename T, typename M>
-class CachedFoo : public Foo<T> {
+class CachedFoo : public SimpleFoo<T, M> {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
@@ -396,7 +396,7 @@ class CachedFoo : public Foo<T> {
 
   // Constructor
   CachedFoo(MPtr m, Cache cache = Cache())
-      : _m(std::move(m)), _cache(std::move(cache)) {
+      : SimpleFoo<T,M>(std::move(m)), _cache(std::move(cache)) {
   }
 
   // Overriden methods
@@ -409,11 +409,11 @@ class CachedFoo : public Foo<T> {
     return _cache;
   }
 
- private:
+ protected:
   // Instance variables
-  MPtr _m;
   Cache _cache;
 
+ private:
   GENERATE_METHOD_DELEGATOR(method, _m)
 };
 
