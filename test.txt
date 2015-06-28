@@ -1,0 +1,37 @@
+
+Test BarDerived
+================
+Running simple for Target in BarDerived
+Running cached for Target in BarDerived
+Cache: d
+Running simple for Spot in BarDerived
+Running cached for Spot in BarDerived
+Cache: d
+
+Test BarDerived casted to Bar
+==============================
+Running simple for Target in BarDerived
+Running cached for Target in BarDerived
+Cache: d
+Running simple for Spot in BarDerived
+Running cached for Spot in BarDerived
+Cache: d
+
+Test BarReusing
+================
+Running simple for Target in BarCrtp
+Running cached for Target in BarCrtp
+Cache: i
+Running simple for Spot in BarCrtp
+Running cached for Spot in BarCrtp
+Cache: i
+
+Test BarReusing casted to Bar
+==============================
+Running simple for Target in BarCrtp
+Running cached for Target in BarCrtp
+Cache: i
+Running simple for Spot in BarCrtp
+Running cached for Spot in BarCrtp
+Cache: i
+
