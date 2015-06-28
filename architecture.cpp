@@ -6,9 +6,9 @@
 //                                                                            //
 //                             foo->method(msg)                               //
 //                                    \/                                      //
-//                           foo->methodImpl(msg)                             //
+//                           foo->method(tag, msg)                            //
 //                                    \/                                      //
-//                          model->method(Foo, msg)                           //
+//                          model->method(foo, msg)                           //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
