@@ -251,7 +251,8 @@ inline auto method##Impl(Args... args)                                         \
 template<typename... Args>                                                     \
 inline auto method##Impl(no_##method##_tag, Args... args) const                \
     -> decltype(this->method(args...)) {                                       \
-  static_assert(is_base, "Class don't have method 'method'!");                 \
+  static_assert(always_false<decltype(this)>::value,                           \
+                "Missing implementation of member function '" #method "'!");   \
   throw std::logic_error("Calling from base class with no 'method'");          \
 }                                                                              \
                                                                                \
@@ -337,21 +338,19 @@ class Foo : public std::enable_shared_from_this<Foo<T>> {
 /* CLASS SimpleFoo ************************************************************/
 
 // Forward declaration
-template<typename T, typename M, bool is_base>
+template<typename T, typename M>
 class SimpleFoo;
 
 // Alias
-template<typename T, typename M, bool is_base = false>
-using SimpleFooPtr = std::shared_ptr<SimpleFoo<T, M, is_base>>;
+template<typename T, typename M>
+using SimpleFooPtr = std::shared_ptr<SimpleFoo<T, M>>;
 
 /**
  * @class SimpleFoo
  * Simple implementation of Foo front-end
  */
-template<typename T, typename M, bool is_base = false>
-class SimpleFoo
-    : public std::conditional<!std::is_void<typename M::Base>::value,
-               SimpleFoo<T, typename M::Base, true>, Foo<T>>::type {
+template<typename T, typename M>
+class SimpleFoo : public Foo<T> {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
@@ -377,21 +376,19 @@ class SimpleFoo
 /* CLASS CachedFoo ************************************************************/
 
 // Forward declaration
-template<typename T, typename M, bool is_base>
+template<typename T, typename M>
 class CachedFoo;
 
 // Alias
-template<typename T, typename M, bool is_base = false>
-using CachedFooPtr = std::shared_ptr<CachedFoo<T, M, is_base>>;
+template<typename T, typename M>
+using CachedFooPtr = std::shared_ptr<CachedFoo<T, M>>;
 
 /**
  * @class CachedFoo
  * Cached implementation of Foo front-end
  */
-template<typename T, typename M, bool is_base = false>
-class CachedFoo
-    : public std::conditional<!std::is_void<typename M::Base>::value,
-               CachedFoo<T, typename M::Base, true>, Foo<T>>::type {
+template<typename T, typename M>
+class CachedFoo : public Foo<T> {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
