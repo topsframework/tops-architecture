@@ -356,7 +356,7 @@ class SimpleFoo : public Foo<T> {
   using MPtr = std::shared_ptr<M>;
 
   // Constructor
-  SimpleFoo(MPtr m = MPtr())
+  SimpleFoo(MPtr m)
       : _m(std::move(m)) {
   }
 
@@ -395,7 +395,7 @@ class CachedFoo : public Foo<T> {
   using Cache = typename M::Cache;
 
   // Constructor
-  CachedFoo(MPtr m = MPtr(), Cache cache = Cache())
+  CachedFoo(MPtr m, Cache cache = Cache())
       : _m(std::move(m)), _cache(std::move(cache)) {
   }
 
