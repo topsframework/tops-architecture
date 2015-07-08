@@ -816,16 +816,33 @@ class BarReusing : public BarCrtp<BarReusing> {
 ////////////////////////////////////////////////////////////////////////////////
 */
 
+// Forward declaration
+class ConcreteVisitor;
+
+// Alias
+using ConcreteVisitorPtr = std::shared_ptr<ConcreteVisitor>;
+
+/**
+ * @class ConcreteVisitor
+ * Concrete implementation of main hierarchy visitor
+ */
 class ConcreteVisitor : public Visitor {
  public:
-  virtual void visit(std::shared_ptr<Baz> /* top */) {
+  // Static methods
+  template<typename... Args>
+  static ConcreteVisitorPtr make(Args&&... args) {
+    return ConcreteVisitorPtr(new ConcreteVisitor(std::forward<Args>(args)...));
   }
 
-  virtual void visit(std::shared_ptr<BarDerived> top) {
+  // Overriden methods
+  void visit(std::shared_ptr<Baz> /* top */) override {
+  }
+
+  void visit(std::shared_ptr<BarDerived> top) override {
     top->targetFoo()->method();
   }
 
-  virtual void visit(std::shared_ptr<BarReusing> top) {
+  void visit(std::shared_ptr<BarReusing> top) override {
     top->targetFoo()->method();
   }
 };
@@ -889,7 +906,7 @@ int main(int /* argc */, char ** /* argv */) {
     std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
   );
 
-  composite->acceptor(VisitorPtr(new ConcreteVisitor()))->accept();
+  composite->acceptor(ConcreteVisitor::make())->accept();
 
   std::cout << std::endl;
 
