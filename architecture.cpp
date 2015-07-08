@@ -329,7 +329,7 @@ class Spot {
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
-                               HIERARCHY FRONT-END
+                                 FOO FRONT-END
  -------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 */
@@ -440,7 +440,7 @@ class CachedFoo : public SimpleFoo<T, M> {
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
-                                     VISITOR
+                               VISITOR FRONT-END
  -------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
 */
@@ -466,6 +466,80 @@ class Visitor {
   virtual void visit(std::shared_ptr<BarReusing> top) = 0;
 };
 
+/* CLASS Acceptor *************************************************************/
+
+// Forward declaration
+class Acceptor;
+
+// Alias
+using AcceptorPtr = std::shared_ptr<Acceptor>;
+
+/**
+ * @class Acceptor
+ * Interface for implementation of Acceptor front-end
+ */
+class Acceptor : public std::enable_shared_from_this<Acceptor> {
+ public:
+  // Enum classes
+  enum class traversal { pre_order, post_order };
+
+  // Concrete methods
+  void pre_order() {
+    accept(traversal::pre_order);
+  }
+
+  void post_order() {
+    accept(traversal::pre_order);
+  }
+
+  // Virtual methods
+  virtual void accept(const traversal& type = traversal::post_order) = 0;
+};
+
+/* CLASS SimpleAcceptor *******************************************************/
+
+// Forward declaration
+template<typename M>
+class SimpleAcceptor;
+
+// Alias
+template<typename M>
+using SimpleAcceptorPtr = std::shared_ptr<SimpleAcceptor<M>>;
+
+/**
+ * @class SimpleAcceptor
+ * Simple implementation of Acceptor front-end
+ */
+template<typename M>
+class SimpleAcceptor : public Acceptor {
+ public:
+  // Alias
+  using MPtr = std::shared_ptr<M>;
+
+  // Constructor
+  SimpleAcceptor(MPtr m, VisitorPtr visitor)
+      : _m(std::move(m)), _visitor(visitor) {
+  }
+
+  // Overriden methods
+  void accept(const Acceptor::traversal& type) override {
+    CALL_METHOD_DELEGATOR(accept, type);
+  }
+
+  // Concrete methods
+  VisitorPtr visitor() {
+    return _visitor;
+  }
+
+ protected:
+  // Instance variables
+  MPtr _m;
+  VisitorPtr _visitor;
+
+ private:
+  GENERATE_METHOD_DELEGATOR(accept, _m)
+};
+
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
@@ -488,15 +562,11 @@ using TopPtr = std::shared_ptr<Top>;
  */
 class Top {
  public:
-  // Enum classes
-  enum class traversal { pre_order, post_order };
-
   // Destructor
   virtual ~Top() {}
 
   // Purely virtual methods
-  virtual void accept(VisitorPtr visitor,
-                      const traversal& type = traversal::post_order) = 0;
+  virtual AcceptorPtr acceptor(VisitorPtr visitor) = 0;
 };
 
 /* CLASS TopCrtp **************************************************************/
@@ -528,10 +598,16 @@ class TopCrtp
     return DerivedPtr(new Derived(std::forward<Args>(args)...));
   }
 
+  // Overriden methods
+  AcceptorPtr acceptor(VisitorPtr visitor) override {
+    return std::make_shared<SimpleAcceptor<Derived>>(
+      this->make_shared(), visitor);
+  }
+
   // Virtual methods
-  void accept(VisitorPtr visitor,
-              const traversal& /* type */ = traversal::post_order) override {
-    visitor->visit(make_shared());
+  virtual void accept(SimpleAcceptorPtr<Derived> acceptor,
+                      const Acceptor::traversal& /* type */) {
+    acceptor->visitor()->visit(this->make_shared());
   }
 
  protected:
@@ -671,15 +747,11 @@ class BarDerived : public BarCrtp<BarDerived> {
   }
 
   // Overriden methods
-  void accept(VisitorPtr visitor,
-              const traversal& type = traversal::post_order) override {
-    if (type == traversal::pre_order)
-      for (auto bar : _bars) bar->accept(visitor, type);
-
-    visitor->visit(make_shared());
-
-    if (type == traversal::post_order)
-      for (auto bar : _bars) bar->accept(visitor, type);
+  void accept(SimpleAcceptorPtr<BarDerived> acceptor,
+              const Acceptor::traversal& type) override {
+    if (type == Acceptor::traversal::pre_order) compose_accept(acceptor, type);
+    acceptor->visitor()->visit(this->make_shared());
+    if (type == Acceptor::traversal::post_order) compose_accept(acceptor, type);
   }
 
   void method(SimpleFooPtr<Target, BarDerived> /* simpleFoo */,
@@ -710,6 +782,12 @@ class BarDerived : public BarCrtp<BarDerived> {
 
  private:
   std::vector<BarPtr> _bars;
+
+  void compose_accept(SimpleAcceptorPtr<BarDerived> acceptor,
+                      const Acceptor::traversal& type) {
+    for (auto bar : _bars)
+      bar->acceptor(acceptor->visitor())->accept(type);
+  }
 };
 
 /* CLASS BarReusing ***********************************************************/
@@ -811,7 +889,7 @@ int main(int /* argc */, char ** /* argv */) {
     std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
   );
 
-  composite->accept(VisitorPtr(new ConcreteVisitor()));
+  composite->acceptor(VisitorPtr(new ConcreteVisitor()))->accept();
 
   std::cout << std::endl;
 
