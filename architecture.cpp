@@ -15,6 +15,7 @@
 // Standard headers
 #include <memory>
 #include <string>
+#include <vector>
 #include <iostream>
 #include <exception>
 #include <type_traits>
@@ -439,6 +440,35 @@ class CachedFoo : public SimpleFoo<T, M> {
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
+                                     VISITOR
+ -------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+*/
+
+/* CLASS Visitor **************************************************************/
+
+// Forward declaration
+class Visitor;
+
+// Alias
+using VisitorPtr = std::shared_ptr<Visitor>;
+
+// Forward declaration
+class Baz;
+class BarDerived;
+class BarReusing;
+
+class Visitor {
+ public:
+  // Purely virtual functions
+  virtual void visit(std::shared_ptr<Baz> top) = 0;
+  virtual void visit(std::shared_ptr<BarDerived> top) = 0;
+  virtual void visit(std::shared_ptr<BarReusing> top) = 0;
+};
+
+/*
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+ -------------------------------------------------------------------------------
                                HIERARCHY BACK-END
  -------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -456,10 +486,59 @@ using TopPtr = std::shared_ptr<Top>;
  * @class Top
  * Top of the class hierarchy
  */
-class Top : public std::enable_shared_from_this<Top> {
+class Top {
  public:
+  // Enum classes
+  enum class traversal { pre_order, post_order };
+
+  // Destructor
+  virtual ~Top() {}
+
+  // Purely virtual methods
+  virtual void accept(VisitorPtr visitor,
+                      const traversal& type = traversal::post_order) = 0;
+};
+
+/* CLASS TopCrtp **************************************************************/
+
+// Forward declaration
+template<typename Derived>
+class TopCrtp;
+
+// Alias
+template<typename Derived>
+using TopCrtpPtr = std::shared_ptr<TopCrtp<Derived>>;
+
+/**
+ * @class TopCrtp
+ * Implementation of visitor, using CRTP to inject methods in subclasses
+ */
+template<typename Derived>
+class TopCrtp
+    : public std::enable_shared_from_this<TopCrtp<Derived>>, public virtual Top {
+ public:
+  // Alias
   using Base = void;
   using Cache = int;
+  using DerivedPtr = std::shared_ptr<Derived>;
+
+  // Static methods
+  template<typename... Args>
+  static DerivedPtr make(Args&&... args) {
+    return DerivedPtr(new Derived(std::forward<Args>(args)...));
+  }
+
+  // Virtual methods
+  void accept(VisitorPtr visitor,
+              const traversal& type = traversal::post_order) override {
+    visitor->visit(make_shared());
+  }
+
+ protected:
+  DerivedPtr make_shared() {
+    return std::static_pointer_cast<Derived>(
+      static_cast<Derived *>(this)->shared_from_this());
+  }
 };
 
 /* CLASS Baz ******************************************************************/
@@ -474,9 +553,10 @@ using BazPtr = std::shared_ptr<Baz>;
  * @class Baz
  * Basic son of Top
  */
-class Baz : public Top {
+class Baz : public TopCrtp<Baz> {
  public:
-  using Base = Top;
+  // Alias
+  using Base = TopCrtp<Baz>;
 };
 
 /* CLASS Bar ******************************************************************/
@@ -491,9 +571,10 @@ using BarPtr = std::shared_ptr<Bar>;
  * @class Bar
  * Complex son of Top, with definition of new front-end
  */
-class Bar : public Top {
+class Bar : public virtual Top {
  public:
-  using Base = Top;
+  // Destructor
+  virtual ~Bar() {}
 
   // Purely virtual methods
   virtual FooPtr<Target> targetFoo(bool cached) = 0;
@@ -515,22 +596,22 @@ using BarCrtpPtr = std::shared_ptr<BarCrtp<Derived>>;
  * Implementation of front-end, using CRTP to inject methods in subclasses
  */
 template<typename Derived>
-class BarCrtp : public Bar {
+class BarCrtp : public TopCrtp<Derived>, public virtual Bar {
  public:
-  using Base = Bar;
-  using DerivedPtr = std::shared_ptr<Derived>;
+  // Alias
+  using Base = TopCrtp<Derived>;
 
   // Overriding methods
   FooPtr<Target> targetFoo(bool cached = true) override {
     if (cached)
-      return std::make_shared<CachedFoo<Target, Derived>>(make_shared());
-    return std::make_shared<SimpleFoo<Target, Derived>>(make_shared());
+      return std::make_shared<CachedFoo<Target, Derived>>(this->make_shared());
+    return std::make_shared<SimpleFoo<Target, Derived>>(this->make_shared());
   }
 
   FooPtr<Spot> spotFoo(bool cached = true) override {
     if (cached)
-      return std::make_shared<CachedFoo<Spot, Derived>>(make_shared());
-    return std::make_shared<SimpleFoo<Spot, Derived>>(make_shared());
+      return std::make_shared<CachedFoo<Spot, Derived>>(this->make_shared());
+    return std::make_shared<SimpleFoo<Spot, Derived>>(this->make_shared());
   }
 
   void messageBroadcast(const std::string& msg) const {
@@ -564,12 +645,6 @@ class BarCrtp : public Bar {
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
     messageBroadcast(msg);
   }
-
- private:
-  DerivedPtr make_shared() {
-    return std::static_pointer_cast<Derived>(
-      static_cast<Derived *>(this)->shared_from_this());
-  }
 };
 
 /* CLASS BarDerived ***********************************************************/
@@ -586,10 +661,27 @@ using BarDerivedPtr = std::shared_ptr<BarDerived>;
  */
 class BarDerived : public BarCrtp<BarDerived> {
  public:
+  // Alias
   using Base = BarCrtp<BarDerived>;
   using Cache = double;
 
+  // Constructors
+  BarDerived(std::vector<BarPtr> bars = {})
+      : _bars(bars) {
+  }
+
   // Overriden methods
+  void accept(VisitorPtr visitor,
+              const traversal& type = traversal::post_order) override {
+    if (type == traversal::pre_order)
+      for (auto bar : _bars) bar->accept(visitor, type);
+
+    visitor->visit(make_shared());
+
+    if (type == traversal::post_order)
+      for (auto bar : _bars) bar->accept(visitor, type);
+  }
+
   void method(SimpleFooPtr<Target, BarDerived> simpleFoo,
               const std::string &msg) const override {
     std::cout << "Running simple for Target in BarDerived" << std::endl;
@@ -615,6 +707,9 @@ class BarDerived : public BarCrtp<BarDerived> {
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
     messageBroadcast(msg);
   }
+
+ private:
+  std::vector<BarPtr> _bars;
 };
 
 /* CLASS BarReusing ***********************************************************/
@@ -631,7 +726,30 @@ using BarReusingPtr = std::shared_ptr<BarReusing>;
  */
 class BarReusing : public BarCrtp<BarReusing> {
  public:
+  // Alias
   using Base = BarCrtp<BarReusing>;
+};
+
+/*
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+ -------------------------------------------------------------------------------
+                              VISITOR IMPLEMENTATION
+ -------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+*/
+
+class ConcreteVisitor : public Visitor {
+ public:
+  virtual void visit(std::shared_ptr<Baz> top) {
+  }
+
+  virtual void visit(std::shared_ptr<BarDerived> top) {
+    top->targetFoo()->method();
+  }
+
+  virtual void visit(std::shared_ptr<BarReusing> top) {
+    top->targetFoo()->method();
+  }
 };
 
 /*
@@ -650,7 +768,7 @@ int main(int argc, char **argv) {
 
   std::cout << "Test BarDerived" << std::endl;
   std::cout << "================" << std::endl;
-  auto barDerived = std::make_shared<BarDerived>();
+  auto barDerived = BarDerived::make();
   barDerived->targetFoo(false)->method();
   barDerived->targetFoo(true)->method();
   barDerived->spotFoo(false)->method();
@@ -669,7 +787,7 @@ int main(int argc, char **argv) {
 
   std::cout << "Test BarReusing" << std::endl;
   std::cout << "================" << std::endl;
-  auto barReusing = std::make_shared<BarReusing>();
+  auto barReusing = BarReusing::make();
   barReusing->targetFoo(false)->method();
   barReusing->targetFoo(true)->method();
   barReusing->spotFoo(false)->method();
@@ -683,6 +801,17 @@ int main(int argc, char **argv) {
   static_cast<BarPtr>(barReusing)->targetFoo(true)->method();
   static_cast<BarPtr>(barReusing)->spotFoo(false)->method();
   static_cast<BarPtr>(barReusing)->spotFoo(true)->method();
+
+  std::cout << std::endl;
+
+  std::cout << "Test visitor classes" << std::endl;
+  std::cout << "==============================" << std::endl;
+
+  auto composite = BarDerived::make(
+    std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
+  );
+
+  composite->accept(VisitorPtr(new ConcreteVisitor()));
 
   std::cout << std::endl;
 

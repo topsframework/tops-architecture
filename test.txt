@@ -35,3 +35,12 @@ Running simple for Spot in BarCrtp
 Running cached for Spot in BarCrtp
 Cache: i
 
+Test visitor classes
+==============================
+Running cached for Target in BarDerived
+Cache: d
+Running cached for Target in BarDerived
+Cache: d
+Running cached for Target in BarCrtp
+Cache: i
+
