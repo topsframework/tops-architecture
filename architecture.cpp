@@ -530,7 +530,7 @@ class TopCrtp
 
   // Virtual methods
   void accept(VisitorPtr visitor,
-              const traversal& type = traversal::post_order) override {
+              const traversal& /* type */ = traversal::post_order) override {
     visitor->visit(make_shared());
   }
 
@@ -620,7 +620,7 @@ class BarCrtp : public TopCrtp<Derived>, public virtual Bar {
   }
 
   // Virtual methods
-  virtual void method(SimpleFooPtr<Target, Derived> simpleFoo,
+  virtual void method(SimpleFooPtr<Target, Derived> /* simpleFoo */,
                       const std::string &msg) const {
     std::cout << "Running simple for Target in BarCrtp" << std::endl;
     messageBroadcast(msg);
@@ -633,7 +633,7 @@ class BarCrtp : public TopCrtp<Derived>, public virtual Bar {
     messageBroadcast(msg);
   }
 
-  virtual void method(SimpleFooPtr<Spot, Derived> simpleFoo,
+  virtual void method(SimpleFooPtr<Spot, Derived> /* simpleFoo */,
                       const std::string &msg) const {
     std::cout << "Running simple for Spot in BarCrtp" << std::endl;
     messageBroadcast(msg);
@@ -682,7 +682,7 @@ class BarDerived : public BarCrtp<BarDerived> {
       for (auto bar : _bars) bar->accept(visitor, type);
   }
 
-  void method(SimpleFooPtr<Target, BarDerived> simpleFoo,
+  void method(SimpleFooPtr<Target, BarDerived> /* simpleFoo */,
               const std::string &msg) const override {
     std::cout << "Running simple for Target in BarDerived" << std::endl;
     messageBroadcast(msg);
@@ -695,7 +695,7 @@ class BarDerived : public BarCrtp<BarDerived> {
     messageBroadcast(msg);
   }
 
-  void method(SimpleFooPtr<Spot, BarDerived> simpleFoo,
+  void method(SimpleFooPtr<Spot, BarDerived> /* simpleFoo */,
               const std::string &msg) const override {
     std::cout << "Running simple for Spot in BarDerived" << std::endl;
     messageBroadcast(msg);
@@ -740,7 +740,7 @@ class BarReusing : public BarCrtp<BarReusing> {
 
 class ConcreteVisitor : public Visitor {
  public:
-  virtual void visit(std::shared_ptr<Baz> top) {
+  virtual void visit(std::shared_ptr<Baz> /* top */) {
   }
 
   virtual void visit(std::shared_ptr<BarDerived> top) {
@@ -762,7 +762,7 @@ class ConcreteVisitor : public Visitor {
 
 /* FUNCTION main **************************************************************/
 
-int main(int argc, char **argv) {
+int main(int /* argc */, char ** /* argv */) {
 
   std::cout << std::endl;
 
