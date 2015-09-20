@@ -567,6 +567,7 @@ class Top {
 
   // Purely virtual methods
   virtual AcceptorPtr acceptor(VisitorPtr visitor) = 0;
+  virtual void dump() = 0;
 };
 
 /* CLASS TopCrtp **************************************************************/
@@ -604,6 +605,11 @@ class TopCrtp
       this->make_shared(), visitor);
   }
 
+  void dump() override {
+    for (auto word : _text)
+      std::cout << word << std::endl;
+  }
+
   // Virtual methods
   virtual void accept(SimpleAcceptorPtr<Derived> acceptor,
                       const Acceptor::traversal& /* type */) {
@@ -611,6 +617,15 @@ class TopCrtp
   }
 
  protected:
+  // Instance variables
+  std::vector<std::string> _text;
+
+  // Constructors
+  TopCrtp(const std::vector<std::string> &text = {})
+    : _text(text) {
+  }
+
+  // Concrete methods
   DerivedPtr make_shared() {
     return std::static_pointer_cast<Derived>(
       static_cast<Derived *>(this)->shared_from_this());
@@ -633,6 +648,10 @@ class Baz : public TopCrtp<Baz> {
  public:
   // Alias
   using Base = TopCrtp<Baz>;
+
+ protected:
+  // Constructor inheritance
+  using Base::TopCrtp;
 };
 
 /* CLASS Bar ******************************************************************/
@@ -721,6 +740,10 @@ class BarCrtp : public TopCrtp<Derived>, public virtual Bar {
     std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
     messageBroadcast(msg);
   }
+
+ protected:
+  // Constructor inheritance
+  using Base::TopCrtp;
 };
 
 /* CLASS BarDerived ***********************************************************/
@@ -781,8 +804,10 @@ class BarDerived : public BarCrtp<BarDerived> {
   }
 
  private:
+  // Instance variables
   std::vector<BarPtr> _bars;
 
+  // Concrete methods
   void compose_accept(SimpleAcceptorPtr<BarDerived> acceptor,
                       const Acceptor::traversal& type) {
     for (auto bar : _bars)
@@ -806,6 +831,10 @@ class BarReusing : public BarCrtp<BarReusing> {
  public:
   // Alias
   using Base = BarCrtp<BarReusing>;
+
+ protected:
+  // Constructor inheritance
+  using Base::BarCrtp;
 };
 
 /*
