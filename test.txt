@@ -1,4 +1,8 @@
 
+######################
+# Test Foo front-end #
+######################
+
 Test BarDerived
 ================
 Running simple for Target in BarDerived
@@ -35,8 +39,12 @@ Running simple for Spot in BarCrtp
 Running cached for Spot in BarCrtp
 Cache: i
 
-Test visitor classes
-==============================
+##########################
+# Test Visitor front-end #
+##########################
+
+Test ConcreteVisitor
+=====================
 Running cached for Target in BarDerived
 Cache: d
 Running cached for Target in BarDerived

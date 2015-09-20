@@ -888,7 +888,13 @@ class ConcreteVisitor : public Visitor {
 
 int main(int /* argc */, char ** /* argv */) {
 
-  std::cout << std::endl;
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "######################" << std::endl;
+  std::cout << "# Test Foo front-end #" << std::endl;
+  std::cout << "######################" << std::endl;
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
 
   std::cout << "Test BarDerived" << std::endl;
   std::cout << "================" << std::endl;
@@ -898,7 +904,7 @@ int main(int /* argc */, char ** /* argv */) {
   barDerived->spotFoo(false)->method();
   barDerived->spotFoo(true)->method();
 
-  std::cout << std::endl;
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
 
   std::cout << "Test BarDerived casted to Bar" << std::endl;
   std::cout << "==============================" << std::endl;
@@ -907,7 +913,7 @@ int main(int /* argc */, char ** /* argv */) {
   static_cast<BarPtr>(barDerived)->spotFoo(false)->method();
   static_cast<BarPtr>(barDerived)->spotFoo(true)->method();
 
-  std::cout << std::endl;
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
 
   std::cout << "Test BarReusing" << std::endl;
   std::cout << "================" << std::endl;
@@ -917,7 +923,7 @@ int main(int /* argc */, char ** /* argv */) {
   barReusing->spotFoo(false)->method();
   barReusing->spotFoo(true)->method();
 
-  std::cout << std::endl;
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
 
   std::cout << "Test BarReusing casted to Bar" << std::endl;
   std::cout << "==============================" << std::endl;
@@ -926,10 +932,16 @@ int main(int /* argc */, char ** /* argv */) {
   static_cast<BarPtr>(barReusing)->spotFoo(false)->method();
   static_cast<BarPtr>(barReusing)->spotFoo(true)->method();
 
-  std::cout << std::endl;
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
 
-  std::cout << "Test visitor classes" << std::endl;
-  std::cout << "==============================" << std::endl;
+  std::cout << "##########################" << std::endl;
+  std::cout << "# Test Visitor front-end #" << std::endl;
+  std::cout << "##########################" << std::endl;
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test ConcreteVisitor" << std::endl;
+  std::cout << "=====================" << std::endl;
 
   auto composite = BarDerived::make(
     std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
@@ -937,7 +949,7 @@ int main(int /* argc */, char ** /* argv */) {
 
   composite->acceptor(ConcreteVisitor::make())->accept();
 
-  std::cout << std::endl;
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
 
   return 0;
 }
