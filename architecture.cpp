@@ -757,7 +757,8 @@ using TopCrtpPtr = std::shared_ptr<TopCrtp<Derived>>;
  */
 template<typename Derived>
 class TopCrtp
-    : public std::enable_shared_from_this<TopCrtp<Derived>>, public virtual Top {
+    : public std::enable_shared_from_this<TopCrtp<Derived>>,
+      public virtual Top {
  public:
   // Alias
   using Base = void;
