@@ -899,29 +899,29 @@ class BarCrtp : public TopCrtp<Derived>, public virtual Bar {
   }
 
   // Virtual methods
-  virtual void method(SimpleFooPtr<Target, Derived> /* simpleFoo */,
+  virtual void method(SimpleFooPtr<Target, Derived> /* simple_foo */,
                       const std::string &msg) const {
     std::cout << "Running simple for Target in BarCrtp" << std::endl;
     messageBroadcast(msg);
   }
 
-  virtual void method(CachedFooPtr<Target, Derived> cachedFoo,
+  virtual void method(CachedFooPtr<Target, Derived> cached_foo,
                       const std::string &msg) const {
     std::cout << "Running cached for Target in BarCrtp" << std::endl;
-    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+    std::cout << "Cache: " << typeid(cached_foo->cache()).name() << std::endl;
     messageBroadcast(msg);
   }
 
-  virtual void method(SimpleFooPtr<Spot, Derived> /* simpleFoo */,
+  virtual void method(SimpleFooPtr<Spot, Derived> /* simple_foo */,
                       const std::string &msg) const {
     std::cout << "Running simple for Spot in BarCrtp" << std::endl;
     messageBroadcast(msg);
   }
 
-  virtual void method(CachedFooPtr<Spot, Derived> cachedFoo,
+  virtual void method(CachedFooPtr<Spot, Derived> cached_foo,
                       const std::string &msg) const {
     std::cout << "Running cached for Spot in BarCrtp" << std::endl;
-    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+    std::cout << "Cache: " << typeid(cached_foo->cache()).name() << std::endl;
     messageBroadcast(msg);
   }
 
@@ -962,29 +962,29 @@ class BarDerived : public BarCrtp<BarDerived> {
     if (type == Acceptor::traversal::post_order) compose_accept(acceptor, type);
   }
 
-  void method(SimpleFooPtr<Target, BarDerived> /* simpleFoo */,
+  void method(SimpleFooPtr<Target, BarDerived> /* simple_foo */,
               const std::string &msg) const override {
     std::cout << "Running simple for Target in BarDerived" << std::endl;
     messageBroadcast(msg);
   }
 
-  void method(CachedFooPtr<Target, BarDerived> cachedFoo,
+  void method(CachedFooPtr<Target, BarDerived> cached_foo,
               const std::string &msg) const override {
     std::cout << "Running cached for Target in BarDerived" << std::endl;
-    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+    std::cout << "Cache: " << typeid(cached_foo->cache()).name() << std::endl;
     messageBroadcast(msg);
   }
 
-  void method(SimpleFooPtr<Spot, BarDerived> /* simpleFoo */,
+  void method(SimpleFooPtr<Spot, BarDerived> /* simple_foo */,
               const std::string &msg) const override {
     std::cout << "Running simple for Spot in BarDerived" << std::endl;
     messageBroadcast(msg);
   }
 
-  void method(CachedFooPtr<Spot, BarDerived> cachedFoo,
+  void method(CachedFooPtr<Spot, BarDerived> cached_foo,
               const std::string &msg) const override {
     std::cout << "Running cached for Spot in BarDerived" << std::endl;
-    std::cout << "Cache: " << typeid(cachedFoo->cache()).name() << std::endl;
+    std::cout << "Cache: " << typeid(cached_foo->cache()).name() << std::endl;
     messageBroadcast(msg);
   }
 
@@ -1083,39 +1083,39 @@ int main(int /* argc */, char ** /* argv */) {
 
   std::cout << "Test BarDerived" << std::endl;
   std::cout << "================" << std::endl;
-  auto barDerived = BarDerived::make();
-  barDerived->targetFoo(false)->method();
-  barDerived->targetFoo(true)->method();
-  barDerived->spotFoo(false)->method();
-  barDerived->spotFoo(true)->method();
+  auto bar_derived = BarDerived::make();
+  bar_derived->targetFoo(false)->method();
+  bar_derived->targetFoo(true)->method();
+  bar_derived->spotFoo(false)->method();
+  bar_derived->spotFoo(true)->method();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
   std::cout << "Test BarDerived casted to Bar" << std::endl;
   std::cout << "==============================" << std::endl;
-  static_cast<BarPtr>(barDerived)->targetFoo(false)->method();
-  static_cast<BarPtr>(barDerived)->targetFoo(true)->method();
-  static_cast<BarPtr>(barDerived)->spotFoo(false)->method();
-  static_cast<BarPtr>(barDerived)->spotFoo(true)->method();
+  static_cast<BarPtr>(bar_derived)->targetFoo(false)->method();
+  static_cast<BarPtr>(bar_derived)->targetFoo(true)->method();
+  static_cast<BarPtr>(bar_derived)->spotFoo(false)->method();
+  static_cast<BarPtr>(bar_derived)->spotFoo(true)->method();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
   std::cout << "Test BarReusing" << std::endl;
   std::cout << "================" << std::endl;
-  auto barReusing = BarReusing::make();
-  barReusing->targetFoo(false)->method();
-  barReusing->targetFoo(true)->method();
-  barReusing->spotFoo(false)->method();
-  barReusing->spotFoo(true)->method();
+  auto bar_reusing = BarReusing::make();
+  bar_reusing->targetFoo(false)->method();
+  bar_reusing->targetFoo(true)->method();
+  bar_reusing->spotFoo(false)->method();
+  bar_reusing->spotFoo(true)->method();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
   std::cout << "Test BarReusing casted to Bar" << std::endl;
   std::cout << "==============================" << std::endl;
-  static_cast<BarPtr>(barReusing)->targetFoo(false)->method();
-  static_cast<BarPtr>(barReusing)->targetFoo(true)->method();
-  static_cast<BarPtr>(barReusing)->spotFoo(false)->method();
-  static_cast<BarPtr>(barReusing)->spotFoo(true)->method();
+  static_cast<BarPtr>(bar_reusing)->targetFoo(false)->method();
+  static_cast<BarPtr>(bar_reusing)->targetFoo(true)->method();
+  static_cast<BarPtr>(bar_reusing)->spotFoo(false)->method();
+  static_cast<BarPtr>(bar_reusing)->spotFoo(true)->method();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
@@ -1146,28 +1146,28 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "Test BasicCreatorStrategy" << std::endl;
   std::cout << "==========================" << std::endl;
 
-  auto barDerivedBasicCreator = BarDerived::targetCreator();
-  barDerivedBasicCreator->add_text("This");
-  barDerivedBasicCreator->add_text("is");
-  barDerivedBasicCreator->add_text("a");
-  barDerivedBasicCreator->add_text("text");
-  auto basicCreatedBarDerived = barDerivedBasicCreator->create();
+  auto bar_derived_basic_creator = BarDerived::targetCreator();
+  bar_derived_basic_creator->add_text("This");
+  bar_derived_basic_creator->add_text("is");
+  bar_derived_basic_creator->add_text("a");
+  bar_derived_basic_creator->add_text("text");
+  auto basic_created_bar_derived = bar_derived_basic_creator->create();
 
-  basicCreatedBarDerived->dump();
+  basic_created_bar_derived->dump();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
   std::cout << "Test FixedCreatorStrategy" << std::endl;
   std::cout << "==========================" << std::endl;
 
-  auto barDerivedFixedCreator = BarDerived::targetCreator(composite);
-  barDerivedFixedCreator->add_text("This");
-  barDerivedFixedCreator->add_text("is");
-  barDerivedFixedCreator->add_text("a");
-  barDerivedFixedCreator->add_text("text");
-  auto fixedCreatedBarDerived = barDerivedFixedCreator->create();
+  auto bar_derived_fixed_creator = BarDerived::targetCreator(composite);
+  bar_derived_fixed_creator->add_text("This");
+  bar_derived_fixed_creator->add_text("is");
+  bar_derived_fixed_creator->add_text("a");
+  bar_derived_fixed_creator->add_text("text");
+  auto fixed_created_bar_derived = bar_derived_fixed_creator->create();
 
-  fixedCreatedBarDerived->dump();
+  fixed_created_bar_derived->dump();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
