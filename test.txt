@@ -52,3 +52,18 @@ Cache: d
 Running cached for Target in BarCrtp
 Cache: i
 
+##########################
+# Test Creator front-end #
+##########################
+
+Test BasicCreatorStrategy
+==========================
+This
+is
+a
+text
+
+Test FixedCreatorStrategy
+==========================
+
+

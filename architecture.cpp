@@ -543,6 +543,177 @@ class SimpleAcceptor : public Acceptor {
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
+                               CREATOR FRONT-END
+ -------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+*/
+
+/* CLASS CreatorStrategy ******************************************************/
+
+// Forward declaration
+template<typename T, typename M>
+class CreatorStrategy;
+
+// Alias
+template<typename T, typename M>
+using CreatorStrategyPtr = std::shared_ptr<CreatorStrategy<T, M>>;
+
+/**
+ * @class CreatorStrategy
+ * Interface for strategies of Creator front-end
+ */
+template<typename T, typename M>
+class CreatorStrategy {
+ public:
+  // Alias
+  using MPtr = std::shared_ptr<M>;
+
+  // Purely virtual methods
+  virtual MPtr create() = 0;
+  virtual void add_text(const std::string& word) = 0;
+};
+
+/* CLASS BasicCreatorStrategy *************************************************/
+
+/**
+ * @class BasicCreatorStrategy
+ * Basic strategy of Creator front-end
+ */
+template<typename T, typename M>
+class BasicCreatorStrategy : public CreatorStrategy<T, M> {
+ public:
+  // Alias
+  using MPtr = std::shared_ptr<M>;
+  using Self = BasicCreatorStrategy;
+  using SelfPtr = std::shared_ptr<Self>;
+
+  // Static methods
+  template<typename... Args>
+  static SelfPtr make(Args&&... args) {
+    return SelfPtr(new Self(std::forward<Args>(args)...));
+  }
+
+  // Overriden methods
+  MPtr create() override {
+    return M::make(text);
+  }
+
+  void add_text(const std::string& word) override {
+    text.push_back(word);
+  }
+
+ protected:
+  // Instance variables
+  std::vector<std::string> text;
+};
+
+/* CLASS FixedCreatorStrategy *************************************************/
+
+/**
+ * @class FixedCreatorStrategy
+ * Fixed strategy of Creator front-end
+ */
+template<typename T, typename M>
+class FixedCreatorStrategy : public CreatorStrategy<T, M> {
+ public:
+  // Alias
+  using MPtr = std::shared_ptr<M>;
+  using Self = FixedCreatorStrategy;
+  using SelfPtr = std::shared_ptr<Self>;
+
+  // Static methods
+  template<typename... Args>
+  static SelfPtr make(Args&&... args) {
+    return SelfPtr(new Self(std::forward<Args>(args)...));
+  }
+
+  // Overriden methods
+  MPtr create() override {
+    return M::make(*(_m.get()));
+  }
+
+  void add_text(const std::string& /* word */) override {
+    /* do nothing */
+  }
+
+ protected:
+  FixedCreatorStrategy(MPtr m) : _m(std::move(m)) {
+  }
+
+  // Instance variables
+  MPtr _m;
+};
+
+/* CLASS Creator **************************************************************/
+
+// Forward declaration
+template<typename T, typename M>
+class Creator;
+
+// Alias
+template<typename T, typename M>
+using CreatorPtr = std::shared_ptr<Creator<T, M>>;
+
+/**
+ * @class Creator
+ * Interface for implementation of Creator front-end
+ */
+template<typename T, typename M>
+class Creator : public std::enable_shared_from_this<Creator<T, M>> {
+ public:
+  // Alias
+  using MPtr = std::shared_ptr<M>;
+
+  // Purely virtual methods
+  virtual MPtr create() = 0;
+  virtual void add_text(const std::string& word) = 0;
+};
+
+/* CLASS SimpleCreator ********************************************************/
+
+// Forward declaration
+template<typename T, typename M>
+class SimpleCreator;
+
+// Alias
+template<typename T, typename M>
+using SimpleCreatorPtr = std::shared_ptr<SimpleCreator<T, M>>;
+
+/**
+ * @class SimpleCreator
+ * Simple implementation of Creator front-end
+ */
+template<typename T, typename M>
+class SimpleCreator : public Creator<T, M> {
+ public:
+  // Alias
+  using MPtr = std::shared_ptr<M>;
+
+  SimpleCreator() {
+    strategy = BasicCreatorStrategy<T, M>::make();
+  }
+
+  SimpleCreator(MPtr m) {
+    strategy = FixedCreatorStrategy<T, M>::make(std::move(m));
+  }
+
+  // Virtual methods
+  MPtr create() override {
+    return strategy->create();
+  }
+
+  void add_text(const std::string &word) override {
+    return strategy->add_text(word);
+  }
+
+ protected:
+  // Instance variables
+  CreatorStrategyPtr<T, M> strategy;
+};
+
+/*
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+ -------------------------------------------------------------------------------
                                HIERARCHY BACK-END
  -------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -594,6 +765,18 @@ class TopCrtp
   using DerivedPtr = std::shared_ptr<Derived>;
 
   // Static methods
+  template<typename... Args>
+  static CreatorPtr<Target, Derived> targetCreator(Args&&... args) {
+    return CreatorPtr<Target, Derived>(
+      new SimpleCreator<Target, Derived>(std::forward<Args>(args)...));
+  }
+
+  template<typename... Args>
+  static CreatorPtr<Spot, Derived> spotCreator(Args&&... args) {
+    return CreatorPtr<Spot, Derived>(
+      new SimpleCreator<Spot, Derived>(std::forward<Args>(args)...));
+  }
+
   template<typename... Args>
   static DerivedPtr make(Args&&... args) {
     return DerivedPtr(new Derived(std::forward<Args>(args)...));
@@ -765,8 +948,9 @@ class BarDerived : public BarCrtp<BarDerived> {
   using Cache = double;
 
   // Constructors
-  BarDerived(std::vector<BarPtr> bars = {})
-      : _bars(bars) {
+  BarDerived(const std::vector<std::string> &text = {},
+             const std::vector<BarPtr>& bars = {})
+      : BarCrtp(text), _bars(bars) {
   }
 
   // Overriden methods
@@ -944,10 +1128,45 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "=====================" << std::endl;
 
   auto composite = BarDerived::make(
+    std::vector<std::string>{""},
     std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
   );
 
   composite->acceptor(ConcreteVisitor::make())->accept();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "##########################" << std::endl;
+  std::cout << "# Test Creator front-end #" << std::endl;
+  std::cout << "##########################" << std::endl;
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test BasicCreatorStrategy" << std::endl;
+  std::cout << "==========================" << std::endl;
+
+  auto barDerivedBasicCreator = BarDerived::targetCreator();
+  barDerivedBasicCreator->add_text("This");
+  barDerivedBasicCreator->add_text("is");
+  barDerivedBasicCreator->add_text("a");
+  barDerivedBasicCreator->add_text("text");
+  auto basicCreatedBarDerived = barDerivedBasicCreator->create();
+
+  basicCreatedBarDerived->dump();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test FixedCreatorStrategy" << std::endl;
+  std::cout << "==========================" << std::endl;
+
+  auto barDerivedFixedCreator = BarDerived::targetCreator(composite);
+  barDerivedFixedCreator->add_text("This");
+  barDerivedFixedCreator->add_text("is");
+  barDerivedFixedCreator->add_text("a");
+  barDerivedFixedCreator->add_text("text");
+  auto fixedCreatedBarDerived = barDerivedFixedCreator->create();
+
+  fixedCreatedBarDerived->dump();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
