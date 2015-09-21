@@ -747,7 +747,7 @@ class SimpleCreator : public Creator<T, M> {
     strategy = FixedCreatorStrategy<T, M>::make(std::move(m));
   }
 
-  // Virtual methods
+  // Overriden methods
   std::vector<std::string> words() override {
     return strategy->words();
   }
@@ -760,7 +760,7 @@ class SimpleCreator : public Creator<T, M> {
   // Instance variables
   CreatorStrategyPtr<T, M> strategy;
 
-  // Virtual methods
+  // Overriden methods
   MPtr create() override {
     return strategy->create();
   }
