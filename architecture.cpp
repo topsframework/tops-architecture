@@ -543,6 +543,23 @@ class SimpleAcceptor : public Acceptor {
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
+                               CREATOR ALGORITHMS
+ -------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+*/
+
+/* STRUCT creator_algorithm_tag ***********************************************/
+
+struct creator_algorithm_tag {};
+
+struct creator_carriage_tag : public creator_algorithm_tag {};
+struct creator_newline_tag : public creator_algorithm_tag {};
+struct creator_space_tag : public creator_algorithm_tag {};
+struct creator_tab_tag : public creator_algorithm_tag {};
+
+/*
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+ -------------------------------------------------------------------------------
                                CREATOR FRONT-END
  -------------------------------------------------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -570,7 +587,10 @@ class CreatorStrategy {
 
   // Purely virtual methods
   virtual MPtr create() = 0;
-  virtual void add_text(const std::string& word) = 0;
+  virtual bool delegate() = 0;
+
+  virtual std::vector<std::string> words() = 0;
+  virtual void add_word(const std::string& word) = 0;
 };
 
 /* CLASS BasicCreatorStrategy *************************************************/
@@ -595,16 +615,24 @@ class BasicCreatorStrategy : public CreatorStrategy<T, M> {
 
   // Overriden methods
   MPtr create() override {
-    return M::make(text);
+    throw std::logic_error("Should not be called");
   }
 
-  void add_text(const std::string& word) override {
-    text.push_back(word);
+  bool delegate() override {
+    return true;
+  }
+
+  std::vector<std::string> words() override {
+    return _words;
+  }
+
+  void add_word(const std::string& word) override {
+    _words.push_back(word);
   }
 
  protected:
   // Instance variables
-  std::vector<std::string> text;
+  std::vector<std::string> _words;
 };
 
 /* CLASS FixedCreatorStrategy *************************************************/
@@ -632,7 +660,15 @@ class FixedCreatorStrategy : public CreatorStrategy<T, M> {
     return M::make(*(_m.get()));
   }
 
-  void add_text(const std::string& /* word */) override {
+  bool delegate() override {
+    return false;
+  }
+
+  std::vector<std::string> words() override {
+    return {};
+  }
+
+  void add_word(const std::string& /* word */) override {
     /* do nothing */
   }
 
@@ -664,9 +700,22 @@ class Creator : public std::enable_shared_from_this<Creator<T, M>> {
   // Alias
   using MPtr = std::shared_ptr<M>;
 
+  // Virtual methods
+  virtual std::vector<std::string> words() = 0;
+  virtual void add_word(const std::string& word) = 0;
+
+  // Concrete methods
+  template<typename Tag, typename... Args>
+  MPtr create(Tag, Args&&... args) {
+    if (delegate())
+      return M::create(Tag{}, words(), std::forward<Args>(args)...);
+    return create();
+  }
+
+ protected:
   // Purely virtual methods
   virtual MPtr create() = 0;
-  virtual void add_text(const std::string& word) = 0;
+  virtual bool delegate() = 0;
 };
 
 /* CLASS SimpleCreator ********************************************************/
@@ -689,6 +738,7 @@ class SimpleCreator : public Creator<T, M> {
   // Alias
   using MPtr = std::shared_ptr<M>;
 
+  // Constructors
   SimpleCreator() {
     strategy = BasicCreatorStrategy<T, M>::make();
   }
@@ -698,17 +748,26 @@ class SimpleCreator : public Creator<T, M> {
   }
 
   // Virtual methods
-  MPtr create() override {
-    return strategy->create();
+  std::vector<std::string> words() override {
+    return strategy->words();
   }
 
-  void add_text(const std::string &word) override {
-    return strategy->add_text(word);
+  void add_word(const std::string &word) override {
+    return strategy->add_word(word);
   }
 
  protected:
   // Instance variables
   CreatorStrategyPtr<T, M> strategy;
+
+  // Virtual methods
+  MPtr create() override {
+    return strategy->create();
+  }
+
+  bool delegate() override {
+    return strategy->delegate();
+  }
 };
 
 /*
@@ -778,11 +837,6 @@ class TopCrtp
       new SimpleCreator<Spot, Derived>(std::forward<Args>(args)...));
   }
 
-  template<typename... Args>
-  static DerivedPtr make(Args&&... args) {
-    return DerivedPtr(new Derived(std::forward<Args>(args)...));
-  }
-
   // Overriden methods
   AcceptorPtr acceptor(VisitorPtr visitor) override {
     return std::make_shared<SimpleAcceptor<Derived>>(
@@ -790,8 +844,7 @@ class TopCrtp
   }
 
   void dump() override {
-    for (auto word : _text)
-      std::cout << word << std::endl;
+    std::cout << _text << std::endl;
   }
 
   // Virtual methods
@@ -802,10 +855,10 @@ class TopCrtp
 
  protected:
   // Instance variables
-  std::vector<std::string> _text;
+  std::string _text;
 
   // Constructors
-  TopCrtp(const std::vector<std::string> &text = {})
+  TopCrtp(const std::string &text = {})
     : _text(text) {
   }
 
@@ -832,6 +885,33 @@ class Baz : public TopCrtp<Baz> {
  public:
   // Alias
   using Base = TopCrtp<Baz>;
+
+  using Self = Baz;
+  using SelfPtr = std::shared_ptr<Self>;
+
+  // Static methods
+  template<typename... Args>
+  static SelfPtr make(Args&&... args) {
+    return SelfPtr(new Self(std::forward<Args>(args)...));
+  }
+
+  static SelfPtr create(creator_newline_tag,
+                        const std::vector<std::string>& words) {
+    std::string text;
+    for (unsigned int i = 0; i < words.size()-1; i++)
+      text += words[i] + "\n";
+    text += words.back();
+    return Self::make(text);
+  }
+
+  static SelfPtr create(creator_space_tag,
+                        const std::vector<std::string>& words) {
+    std::string text;
+    for (unsigned int i = 0; i < words.size()-1; i++)
+      text += words[i] + " ";
+    text += words.back();
+    return Self::make(text);
+  }
 
  protected:
   // Constructor inheritance
@@ -948,8 +1028,35 @@ class BarDerived : public BarCrtp<BarDerived> {
   using Base = BarCrtp<BarDerived>;
   using Cache = double;
 
+  using Self = BarDerived;
+  using SelfPtr = std::shared_ptr<Self>;
+
+  // Static methods
+  template<typename... Args>
+  static SelfPtr make(Args&&... args) {
+    return SelfPtr(new Self(std::forward<Args>(args)...));
+  }
+
+  static SelfPtr create(creator_carriage_tag,
+                        const std::vector<std::string>& words) {
+    std::string text;
+    for (unsigned int i = 0; i < words.size()-1; i++)
+      text += words[i] + "\r";
+    text += words.back();
+    return Self::make(text);
+  }
+
+  static SelfPtr create(creator_newline_tag,
+                        const std::vector<std::string>& words) {
+    std::string text;
+    for (unsigned int i = 0; i < words.size()-1; i++)
+      text += words[i] + "\n";
+    text += words.back();
+    return Self::make(text);
+  }
+
   // Constructors
-  BarDerived(const std::vector<std::string> &text = {},
+  BarDerived(const std::string &text = {},
              const std::vector<BarPtr>& bars = {})
       : BarCrtp(text), _bars(bars) {
   }
@@ -1016,6 +1123,33 @@ class BarReusing : public BarCrtp<BarReusing> {
  public:
   // Alias
   using Base = BarCrtp<BarReusing>;
+
+  using Self = BarReusing;
+  using SelfPtr = std::shared_ptr<Self>;
+
+  // Static methods
+  template<typename... Args>
+  static SelfPtr make(Args&&... args) {
+    return SelfPtr(new Self(std::forward<Args>(args)...));
+  }
+
+  static SelfPtr create(creator_newline_tag,
+                        const std::vector<std::string>& words) {
+    std::string text;
+    for (unsigned int i = 0; i < words.size()-1; i++)
+      text += words[i] + "\r\n";
+    text += words.back();
+    return Self::make(text);
+  }
+
+  static SelfPtr create(creator_tab_tag,
+                        const std::vector<std::string>& words) {
+    std::string text;
+    for (unsigned int i = 0; i < words.size()-1; i++)
+      text += words[i] + "\t";
+    text += words.back();
+    return Self::make(text);
+  }
 
  protected:
   // Constructor inheritance
@@ -1129,8 +1263,7 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "=====================" << std::endl;
 
   auto composite = BarDerived::make(
-    std::vector<std::string>{""},
-    std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
+    "", std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
   );
 
   composite->acceptor(ConcreteVisitor::make())->accept();
@@ -1147,11 +1280,12 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "==========================" << std::endl;
 
   auto bar_derived_basic_creator = BarDerived::targetCreator();
-  bar_derived_basic_creator->add_text("This");
-  bar_derived_basic_creator->add_text("is");
-  bar_derived_basic_creator->add_text("a");
-  bar_derived_basic_creator->add_text("text");
-  auto basic_created_bar_derived = bar_derived_basic_creator->create();
+  bar_derived_basic_creator->add_word("This");
+  bar_derived_basic_creator->add_word("is");
+  bar_derived_basic_creator->add_word("a");
+  bar_derived_basic_creator->add_word("text");
+  auto basic_created_bar_derived
+    = bar_derived_basic_creator->create(creator_newline_tag{});
 
   basic_created_bar_derived->dump();
 
@@ -1161,11 +1295,12 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "==========================" << std::endl;
 
   auto bar_derived_fixed_creator = BarDerived::targetCreator(composite);
-  bar_derived_fixed_creator->add_text("This");
-  bar_derived_fixed_creator->add_text("is");
-  bar_derived_fixed_creator->add_text("a");
-  bar_derived_fixed_creator->add_text("text");
-  auto fixed_created_bar_derived = bar_derived_fixed_creator->create();
+  bar_derived_fixed_creator->add_word("This");
+  bar_derived_fixed_creator->add_word("is");
+  bar_derived_fixed_creator->add_word("a");
+  bar_derived_fixed_creator->add_word("text");
+  auto fixed_created_bar_derived
+    = bar_derived_fixed_creator->create(creator_newline_tag{});
 
   fixed_created_bar_derived->dump();
 
