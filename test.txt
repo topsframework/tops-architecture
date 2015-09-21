@@ -56,6 +56,19 @@ Cache: i
 # Test Creator front-end #
 ##########################
 
+Test BasicCreatorStrategy with Baz
+===================================
+This
+is
+a
+text
+This is a text
+
+Test FixedCreatorStrategy with Baz
+===================================
+Predefined text
+Predefined text
+
 Test BasicCreatorStrategy with BarDerived
 ==========================================
 This

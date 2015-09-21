@@ -1276,6 +1276,45 @@ int main(int /* argc */, char ** /* argv */) {
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
+  std::cout << "Test BasicCreatorStrategy with Baz" << std::endl;
+  std::cout << "===================================" << std::endl;
+
+  auto baz_basic_creator = Baz::targetCreator();
+  baz_basic_creator->add_word("This");
+  baz_basic_creator->add_word("is");
+  baz_basic_creator->add_word("a");
+  baz_basic_creator->add_word("text");
+
+  auto basic_created_baz_with_newline
+    = baz_basic_creator->create(creator_newline_tag{});
+  basic_created_baz_with_newline->dump();
+
+  auto basic_created_baz_with_space
+    = baz_basic_creator->create(creator_space_tag{});
+  basic_created_baz_with_space->dump();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test FixedCreatorStrategy with Baz" << std::endl;
+  std::cout << "===================================" << std::endl;
+
+  auto predefined_baz = Baz::make("Predefined text");
+  auto baz_fixed_creator = Baz::targetCreator(predefined_baz);
+  baz_fixed_creator->add_word("This");
+  baz_fixed_creator->add_word("is");
+  baz_fixed_creator->add_word("a");
+  baz_fixed_creator->add_word("text");
+
+  auto fixed_created_baz_with_newline
+    = baz_fixed_creator->create(creator_newline_tag{});
+  fixed_created_baz_with_newline->dump();
+
+  auto fixed_created_baz_with_space
+    = baz_fixed_creator->create(creator_space_tag{});
+  fixed_created_baz_with_space->dump();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
   std::cout << "Test BasicCreatorStrategy with BarDerived" << std::endl;
   std::cout << "==========================================" << std::endl;
 
