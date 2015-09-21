@@ -1276,23 +1276,27 @@ int main(int /* argc */, char ** /* argv */) {
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
-  std::cout << "Test BasicCreatorStrategy" << std::endl;
-  std::cout << "==========================" << std::endl;
+  std::cout << "Test BasicCreatorStrategy with BarDerived" << std::endl;
+  std::cout << "==========================================" << std::endl;
 
   auto bar_derived_basic_creator = BarDerived::targetCreator();
   bar_derived_basic_creator->add_word("This");
   bar_derived_basic_creator->add_word("is");
   bar_derived_basic_creator->add_word("a");
   bar_derived_basic_creator->add_word("text");
-  auto basic_created_bar_derived
-    = bar_derived_basic_creator->create(creator_newline_tag{});
 
-  basic_created_bar_derived->dump();
+  auto basic_created_bar_derived_with_newline
+    = bar_derived_basic_creator->create(creator_newline_tag{});
+  basic_created_bar_derived_with_newline->dump();
+
+  auto basic_created_bar_derived_with_carriage
+    = bar_derived_basic_creator->create(creator_carriage_tag{});
+  basic_created_bar_derived_with_carriage->dump();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
-  std::cout << "Test FixedCreatorStrategy" << std::endl;
-  std::cout << "==========================" << std::endl;
+  std::cout << "Test FixedCreatorStrategy with BarDerived" << std::endl;
+  std::cout << "==========================================" << std::endl;
 
   auto predefined_bar_derived = BarDerived::make("Predefined text");
   auto bar_derived_fixed_creator
@@ -1301,10 +1305,14 @@ int main(int /* argc */, char ** /* argv */) {
   bar_derived_fixed_creator->add_word("is");
   bar_derived_fixed_creator->add_word("a");
   bar_derived_fixed_creator->add_word("text");
-  auto fixed_created_bar_derived
-    = bar_derived_fixed_creator->create(creator_newline_tag{});
 
-  fixed_created_bar_derived->dump();
+  auto fixed_created_bar_derived_with_newline
+    = bar_derived_fixed_creator->create(creator_newline_tag{});
+  fixed_created_bar_derived_with_newline->dump();
+
+  auto fixed_created_bar_derived_with_carriage
+    = bar_derived_fixed_creator->create(creator_carriage_tag{});
+  fixed_created_bar_derived_with_carriage->dump();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
