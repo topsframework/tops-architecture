@@ -1294,7 +1294,9 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "Test FixedCreatorStrategy" << std::endl;
   std::cout << "==========================" << std::endl;
 
-  auto bar_derived_fixed_creator = BarDerived::targetCreator(composite);
+  auto predefined_bar_derived = BarDerived::make("Predefined text");
+  auto bar_derived_fixed_creator
+    = BarDerived::targetCreator(predefined_bar_derived);
   bar_derived_fixed_creator->add_word("This");
   bar_derived_fixed_creator->add_word("is");
   bar_derived_fixed_creator->add_word("a");
