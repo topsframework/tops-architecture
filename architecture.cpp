@@ -590,10 +590,10 @@ class Creator : public std::enable_shared_from_this<Creator<T, M>> {
   virtual void add_word(const std::string& word) = 0;
 
   // Concrete methods
-  template<typename Tag, typename... Args>
-  MPtr create(Tag, Args&&... args) {
+  template<typename... Args>
+  MPtr create(Args&&... args) {
     if (delegate())
-      return M::create(Tag{}, words(), std::forward<Args>(args)...);
+      return M::create(this->shared_from_this(), std::forward<Args>(args)...);
     return create();
   }
 
@@ -832,21 +832,19 @@ class Baz : public TopCrtp<Baz> {
     return SelfPtr(new Self(std::forward<Args>(args)...));
   }
 
-  static SelfPtr create(creator_newline_tag,
-                        const std::vector<std::string>& words) {
+  static SelfPtr create(CreatorPtr<Target, Self> creator, creator_newline_tag) {
     std::string text;
-    for (unsigned int i = 0; i < words.size()-1; i++)
-      text += words[i] + "\n";
-    text += words.back();
+    for (unsigned int i = 0; i < creator->words().size()-1; i++)
+      text += creator->words()[i] + "\n";
+    text += creator->words().back();
     return Self::make(text);
   }
 
-  static SelfPtr create(creator_space_tag,
-                        const std::vector<std::string>& words) {
+  static SelfPtr create(CreatorPtr<Target, Self> creator, creator_space_tag) {
     std::string text;
-    for (unsigned int i = 0; i < words.size()-1; i++)
-      text += words[i] + " ";
-    text += words.back();
+    for (unsigned int i = 0; i < creator->words().size()-1; i++)
+      text += creator->words()[i] + " ";
+    text += creator->words().back();
     return Self::make(text);
   }
 
@@ -974,21 +972,19 @@ class BarDerived : public BarCrtp<BarDerived> {
     return SelfPtr(new Self(std::forward<Args>(args)...));
   }
 
-  static SelfPtr create(creator_carriage_tag,
-                        const std::vector<std::string>& words) {
+  static SelfPtr create(CreatorPtr<Target, Self> creator, creator_carriage_tag) {
     std::string text;
-    for (unsigned int i = 0; i < words.size()-1; i++)
-      text += words[i] + "\r";
-    text += words.back();
+    for (unsigned int i = 0; i < creator->words().size()-1; i++)
+      text += creator->words()[i] + "\r";
+    text += creator->words().back();
     return Self::make(text);
   }
 
-  static SelfPtr create(creator_newline_tag,
-                        const std::vector<std::string>& words) {
+  static SelfPtr create(CreatorPtr<Target, Self> creator, creator_newline_tag) {
     std::string text;
-    for (unsigned int i = 0; i < words.size()-1; i++)
-      text += words[i] + "\n";
-    text += words.back();
+    for (unsigned int i = 0; i < creator->words().size()-1; i++)
+      text += creator->words()[i] + "\n";
+    text += creator->words().back();
     return Self::make(text);
   }
 
@@ -1070,21 +1066,19 @@ class BarReusing : public BarCrtp<BarReusing> {
     return SelfPtr(new Self(std::forward<Args>(args)...));
   }
 
-  static SelfPtr create(creator_newline_tag,
-                        const std::vector<std::string>& words) {
+  static SelfPtr create(CreatorPtr<Target, Self> creator, creator_newline_tag) {
     std::string text;
-    for (unsigned int i = 0; i < words.size()-1; i++)
-      text += words[i] + "\r\n";
-    text += words.back();
+    for (unsigned int i = 0; i < creator->words().size()-1; i++)
+      text += creator->words()[i] + "\r\n";
+    text += creator->words().back();
     return Self::make(text);
   }
 
-  static SelfPtr create(creator_tab_tag,
-                        const std::vector<std::string>& words) {
+  static SelfPtr create(CreatorPtr<Target, Self> creator, creator_tab_tag) {
     std::string text;
-    for (unsigned int i = 0; i < words.size()-1; i++)
-      text += words[i] + "\t";
-    text += words.back();
+    for (unsigned int i = 0; i < creator->words().size()-1; i++)
+      text += creator->words()[i] + "\t";
+    text += creator->words().back();
     return Self::make(text);
   }
 
