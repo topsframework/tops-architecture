@@ -991,22 +991,32 @@ class TopCrtp
   using DerivedPtr = std::shared_ptr<Derived>;
 
   // Static methods
+  static CreatorPtr<Target, Derived> targetCreator() {
+    return SimpleCreator<Target, Derived>::make();
+  }
+
   static CreatorPtr<Target, Derived> targetCreator(DerivedPtr model) {
     return FixedCreator<Target, Derived>::make(model);
   }
 
-  template<typename... Args>
-  static CreatorPtr<Target, Derived> targetCreator(Args&&... args) {
-    return SimpleCreator<Target, Derived>::make(std::forward<Args>(args)...);
+  template<typename Tag, typename... Args>
+  static CreatorPtr<Target, Derived> targetCreator(Tag, Args&&... args) {
+    return CachedCreator<Target, Derived, Tag, Args...>::make(
+      Tag{}, std::forward<Args>(args)...);
+  }
+
+  static CreatorPtr<Spot, Derived> spotCreator() {
+    return SimpleCreator<Spot, Derived>::make();
   }
 
   static CreatorPtr<Target, Derived> spotCreator(DerivedPtr model) {
     return FixedCreator<Target, Derived>::make(model);
   }
 
-  template<typename... Args>
-  static CreatorPtr<Spot, Derived> spotCreator(Args&&... args) {
-    return SimpleCreator<Spot, Derived>::make(std::forward<Args>(args)...);
+  template<typename Tag, typename... Args>
+  static CreatorPtr<Spot, Derived> spotCreator(Tag, Args&&... args) {
+    return CachedCreator<Spot, Derived, Tag, Args...>::make(
+      Tag{}, std::forward<Args>(args)...);
   }
 
   // Overriden methods
