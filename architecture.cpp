@@ -585,8 +585,9 @@ class Creator : public std::enable_shared_from_this<Creator<T, M>> {
   // Alias
   using MPtr = std::shared_ptr<M>;
 
-  // Virtual methods
-  virtual std::vector<std::string> words() = 0;
+  // Purely virtual methods
+  virtual std::vector<std::string>& words() = 0;
+  virtual const std::vector<std::string>& words() const = 0;
   virtual void add_word(const std::string& word) = 0;
 
   // Concrete methods
@@ -632,7 +633,12 @@ class SimpleCreator : public Creator<T, M> {
   }
 
   // Overriden methods
-  std::vector<std::string> words() override {
+  std::vector<std::string>& words() override {
+    return const_cast<std::vector<std::string>&>(
+      static_cast<const Self *>(this)->words());
+  }
+
+  const std::vector<std::string>& words() const override {
     return _words;
   }
 
@@ -675,8 +681,13 @@ class FixedCreator : public Creator<T, M> {
   }
 
   // Overriden methods
-  std::vector<std::string> words() override {
-    return {};
+  std::vector<std::string>& words() override {
+    return const_cast<std::vector<std::string>&>(
+      static_cast<const Self *>(this)->words());
+  }
+
+  const std::vector<std::string>& words() const override {
+    throw std::logic_error("Should not be called");
   }
 
   void add_word(const std::string& /* word */) override {
