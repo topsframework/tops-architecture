@@ -747,16 +747,16 @@ class Creator : public std::enable_shared_from_this<Creator<T, M>> {
 
   // Concrete methods
   template<typename... Args>
-  MPtr create(Args&&... args) {
-    if (delegate())
-      return M::create(this->shared_from_this(), std::forward<Args>(args)...);
-    return create();
+  MPtr create(Args&&... args) const {
+    CALL_STATIC_MEMBER_FUNCTION_DELEGATOR(create, std::forward<Args>(args)...);
   }
 
  protected:
   // Purely virtual methods
-  virtual MPtr create() = 0;
-  virtual bool delegate() = 0;
+  virtual bool delegate() const = 0;
+  virtual MPtr createAlt() const = 0;
+
+  GENERATE_STATIC_MEMBER_FUNCTION_DELEGATOR(create, M)
 };
 
 /* CLASS SimpleCreator ********************************************************/
@@ -806,12 +806,12 @@ class SimpleCreator : public Creator<T, M> {
   std::vector<std::string> _words;
 
   // Overriden methods
-  MPtr create() override {
-    throw std::logic_error("Should not be called");
+  bool delegate() const override {
+    return true;
   }
 
-  bool delegate() override {
-    return true;
+  MPtr createAlt() const override {
+    throw std::logic_error("Should not be called");
   }
 };
 
@@ -858,12 +858,12 @@ class FixedCreator : public Creator<T, M> {
   }
 
   // Overriden methods
-  MPtr create() override {
-    return M::make(*(_m.get()));
+  bool delegate() const override {
+    return false;
   }
 
-  bool delegate() override {
-    return false;
+  MPtr createAlt() const override {
+    return M::make(*(_m.get()));
   }
 };
 
