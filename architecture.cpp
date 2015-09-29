@@ -291,6 +291,25 @@ struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
 };
 
 /*============================================================================*/
+/*                              CONTAINER UNPACK                              */
+/*============================================================================*/
+
+template<typename Return, template<typename...> class Pack,
+         typename Ptr, typename... Args, std::size_t... I>
+Return call_helper(const std::function<Return(Ptr, Args...)> &func,
+                   const Ptr &ptr, const Pack<Args...> &params,
+                   std::index_sequence<I...>) {
+  return func(ptr, std::get<I>(params)...);
+}
+
+template<typename Return, template<typename...> class Pack,
+         typename Ptr, typename... Args>
+Return call(const std::function<Return(Ptr, Args...)> &func,
+            const Ptr &ptr, const Pack<Args...> &params) {
+  return call_helper(func, ptr, params, std::index_sequence_for<Args...>{});
+}
+
+/*============================================================================*/
 /*                         MEMBER DELEGATOR GENERATION                        */
 /*============================================================================*/
 

@@ -9,7 +9,7 @@ CFLAGS=${CFLAGS:- -Wall -Wextra -Werror -pedantic -Wcast-align -Wcast-qual -Wfor
 
 # Compile file
 if [ test.sh -nt architecture ] || [ architecture.cpp -nt architecture ];
-    then valgrind -q ${CXX} -std=c++11 ${CFLAGS} architecture.cpp -o architecture || exit 1
+    then valgrind -q ${CXX} -std=c++14 ${CFLAGS} architecture.cpp -o architecture || exit 1
 fi
 
 # Run tests
