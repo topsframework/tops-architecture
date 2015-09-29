@@ -162,6 +162,62 @@ struct has_method_##member<_Klass, _Return(_Args...)>                          \
               >::type;                                                         \
 }
 
+/*============================================================================*/
+/*                      STATIC MEMBER FUNCTION DETECTOR                       */
+/*============================================================================*/
+
+#define GENERATE_HAS_STATIC_MEMBER_FUNCTION(member)                            \
+                                                                               \
+template<typename _Klass, typename Dummy>                                      \
+class HasStaticMethod_##member;                                                \
+                                                                               \
+/*- STATIC METHOD ----------------------------------------------------------*/ \
+                                                                               \
+template<typename _Return, typename... _Args>                                  \
+class HasStaticMethod_##member<void, _Return(_Args...)> {                      \
+ public:                                                                       \
+  static constexpr bool value = false;                                         \
+};                                                                             \
+                                                                               \
+template<typename _Klass, typename _Return, typename... _Args>                 \
+class HasStaticMethod_##member<_Klass, _Return(_Args...)>                      \
+{                                                                              \
+ private:                                                                      \
+  template<typename _U, _U> class Check;                                       \
+                                                                               \
+  template<typename _U>                                                        \
+  static std::true_type test(Check<_Return(*)(_Args...), &_U::member>*);       \
+                                                                               \
+  template<typename _U>                                                        \
+  static std::false_type test(...);                                            \
+                                                                               \
+ public:                                                                       \
+  static constexpr bool value = decltype(test<_Klass>(nullptr))::value         \
+    || HasStaticMethod_##member<typename _Klass::Base,                         \
+                                _Return(_Args...)>::value;                     \
+};                                                                             \
+                                                                               \
+/*- TAGS -------------------------------------------------------------------*/ \
+                                                                               \
+struct no_##member##_tag {};                                                   \
+struct has_##member##_tag {};                                                  \
+                                                                               \
+/*- TYPE TRAIT -------------------------------------------------------------*/ \
+                                                                               \
+template<typename _Klass, typename Dummy>                                      \
+struct has_static_method_##member;                                             \
+                                                                               \
+template<typename _Klass, typename _Return, typename... _Args>                 \
+struct has_static_method_##member<_Klass, _Return(_Args...)>                   \
+    : public std::integral_constant<bool,                                      \
+               HasStaticMethod_##member<_Klass, _Return(_Args...)>::value> {   \
+                                                                               \
+  using tag = typename std::conditional<                                       \
+                has_static_method_##member<_Klass, _Return(_Args...)>::value,  \
+                has_##member##_tag, no_##member##_tag                          \
+              >::type;                                                         \
+}
+
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
