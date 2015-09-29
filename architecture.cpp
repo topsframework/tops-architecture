@@ -30,19 +30,19 @@
 */
 
 // These macro are aimed to create a member detector: a class and type trait
-// that can be used to check when a type/method exists in a class. As there is
-// an infinite number of names, it's impossible to create a standard type trait
-// only with the resources the language provides. Given that, it's necessary to
-// create a macro to automatically generate all classes and alias from a name
-// given as parameter.
+// that can be used to check if a type/member function/static member function
+// exists in a class. As there is an infinite number of names, it's impossible
+// to create a type trait only with the resources the language provides. Given
+// that, it's necessary to create a macro to automatically generate all classes
+// and alias from a name given as parameter.
 
-// The following macros creates:
+// The following macros create:
 // - Template classes that uses SFINAE and multiple inheritance to decide if
 //   the member exists in the class or in one of its superclasses.
 // - A struct inheriting from `std::integral_constant`, which have a trait
 //   compliant with STL.
 // - Two alias `has_##member_tag` and `no_##member_tag` to selectively create
-//   methods by applying SFINAE on its parameters.
+//   member functions by applying SFINAE on its parameters.
 
 /*============================================================================*/
 /*                            MEMBER TYPE DETECTOR                            */
@@ -234,10 +234,10 @@ struct has_static_member_function_##member<_Klass, _Return(_Args...)>          \
 ////////////////////////////////////////////////////////////////////////////////
 */
 
-// Thase macros are aimed to avoid replication of code when creating new
-// methods for a given front-end. They require almost no knowledge about
-// the front end class, but  that the front-end superclass -end inherits
-// from std::enable_shared_from_this.
+// Thase macros are aimed to avoid replication of code when creating new member
+// functions for a given front-end. They require almost no knowledge about the
+// front end class, but  that the front-end superclass -end inherits from
+// std::enable_shared_from_this.
 
 /*============================================================================*/
 /*                           LATE EVALUATED BOOLEANS                          */
