@@ -82,10 +82,10 @@ struct has_type_##member                                                       \
 }
 
 /*============================================================================*/
-/*                           MEMBER METHOD DETECTOR                           */
+/*                          MEMBER FUNCTION DETECTOR                          */
 /*============================================================================*/
 
-#define GENERATE_HAS_MEMBER_METHOD(member)                                     \
+#define GENERATE_HAS_MEMBER_FUNCTION(member)                                   \
                                                                                \
 template<typename _Klass, typename Dummy>                                      \
 class HasMethod_##member;                                                      \
@@ -311,12 +311,12 @@ Return call(const std::function<Return(Ptr, Args...)> &func,
 }
 
 /*============================================================================*/
-/*                         MEMBER DELEGATOR GENERATION                        */
+/*                    MEMBER FUNCTION DELEGATOR GENERATION                    */
 /*============================================================================*/
 
-#define GENERATE_METHOD_DELEGATOR(method, delegatedObject)                     \
+#define GENERATE_MEMBER_FUNCTION_DELEGATOR(method, delegatedObject)            \
                                                                                \
-GENERATE_HAS_MEMBER_METHOD(method);                                            \
+GENERATE_HAS_MEMBER_FUNCTION(method);                                          \
                                                                                \
 template<typename... Args>                                                     \
 inline auto method##Impl(Args&&... args) const                                 \
@@ -378,10 +378,10 @@ inline auto method##Impl(has_##method##_tag, Args&&... args)                   \
 }
 
 /*============================================================================*/
-/*                           MEMBER DELEGATOR CALL                            */
+/*                       MEMBER FUNCTION DELEGATOR CALL                       */
 /*============================================================================*/
 
-#define CALL_METHOD_DELEGATOR(method, ...)                                     \
+#define CALL_MEMBER_FUNCTION_DELEGATOR(method, ...)                            \
 do { return method##Impl(__VA_ARGS__); } while (false)
 
 /*============================================================================*/
@@ -557,7 +557,7 @@ class SimpleFoo : public Foo<T> {
 
   // Overriden methods
   void method(const std::string &msg) const override {
-    CALL_METHOD_DELEGATOR(method, msg);
+    CALL_MEMBER_FUNCTION_DELEGATOR(method, msg);
   }
 
  protected:
@@ -565,7 +565,7 @@ class SimpleFoo : public Foo<T> {
   MPtr _m;
 
  private:
-  GENERATE_METHOD_DELEGATOR(method, _m)
+  GENERATE_MEMBER_FUNCTION_DELEGATOR(method, _m)
 };
 
 /* CLASS CachedFoo ************************************************************/
@@ -596,7 +596,7 @@ class CachedFoo : public SimpleFoo<T, M> {
 
   // Overriden methods
   void method(const std::string &msg) const override {
-    CALL_METHOD_DELEGATOR(method, msg);
+    CALL_MEMBER_FUNCTION_DELEGATOR(method, msg);
   }
 
   // Concrete methods
@@ -609,7 +609,7 @@ class CachedFoo : public SimpleFoo<T, M> {
   Cache _cache;
 
  private:
-  GENERATE_METHOD_DELEGATOR(method, _m)
+  GENERATE_MEMBER_FUNCTION_DELEGATOR(method, _m)
 };
 
 /*
@@ -698,7 +698,7 @@ class SimpleAcceptor : public Acceptor {
 
   // Overriden methods
   void accept(const Acceptor::traversal& type) override {
-    CALL_METHOD_DELEGATOR(accept, type);
+    CALL_MEMBER_FUNCTION_DELEGATOR(accept, type);
   }
 
   // Concrete methods
@@ -712,7 +712,7 @@ class SimpleAcceptor : public Acceptor {
   VisitorPtr _visitor;
 
  private:
-  GENERATE_METHOD_DELEGATOR(accept, _m)
+  GENERATE_MEMBER_FUNCTION_DELEGATOR(accept, _m)
 };
 
 /*
