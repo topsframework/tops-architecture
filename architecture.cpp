@@ -778,7 +778,7 @@ class SimpleCreator : public Creator<T, M> {
  public:
   // Alias
   using MPtr = std::shared_ptr<M>;
-  using Self = SimpleCreator;
+  using Self = SimpleCreator<T, M>;
   using SelfPtr = std::shared_ptr<Self>;
 
   // Static methods
