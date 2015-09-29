@@ -1471,6 +1471,25 @@ int main(int /* argc */, char ** /* argv */) {
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
+  std::cout << "Test CachedCreatorStrategy with Baz" << std::endl;
+  std::cout << "===================================" << std::endl;
+
+  auto baz_cached_creator = Baz::targetCreator(creator_newline_tag{});
+  baz_cached_creator->add_word("This");
+  baz_cached_creator->add_word("is");
+  baz_cached_creator->add_word("a");
+  baz_cached_creator->add_word("text");
+
+  auto cached_created_baz_with_newline
+    = baz_cached_creator->create();
+  cached_created_baz_with_newline->dump();
+
+  auto cached_created_baz_with_space
+    = baz_cached_creator->create(creator_space_tag{});
+  cached_created_baz_with_space->dump();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
   std::cout << "Test FixedCreatorStrategy with Baz" << std::endl;
   std::cout << "===================================" << std::endl;
 
@@ -1507,6 +1526,27 @@ int main(int /* argc */, char ** /* argv */) {
   auto simple_created_bar_derived_with_carriage
     = bar_derived_simple_creator->create(creator_carriage_tag{});
   simple_created_bar_derived_with_carriage->dump();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test CachedCreatorStrategy with BarDerived" << std::endl;
+  std::cout << "===========================================" << std::endl;
+
+  auto bar_derived_cached_creator
+    = BarDerived::targetCreator(creator_newline_tag{});
+
+  bar_derived_cached_creator->add_word("This");
+  bar_derived_cached_creator->add_word("is");
+  bar_derived_cached_creator->add_word("a");
+  bar_derived_cached_creator->add_word("text");
+
+  auto cached_created_bar_derived_with_newline
+    = bar_derived_cached_creator->create();
+  cached_created_bar_derived_with_newline->dump();
+
+  auto cached_created_bar_derived_with_carriage
+    = bar_derived_cached_creator->create(creator_carriage_tag{});
+  cached_created_bar_derived_with_carriage->dump();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 

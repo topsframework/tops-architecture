@@ -64,12 +64,28 @@ a
 text
 This is a text
 
+Test CachedCreatorStrategy with Baz
+===================================
+This
+is
+a
+text
+This is a text
+
 Test FixedCreatorStrategy with Baz
 ===================================
 Predefined text
 Predefined text
 
 Test SimpleCreatorStrategy with BarDerived
+===========================================
+This
+is
+a
+text
+Thisisatext
+
+Test CachedCreatorStrategy with BarDerived
 ===========================================
 This
 is
