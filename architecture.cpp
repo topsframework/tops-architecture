@@ -90,7 +90,7 @@ struct has_type_##member                                                       \
 template<typename _Klass, typename Dummy>                                      \
 class HasMemberFunction_##member;                                              \
                                                                                \
-/*- NON-CONST METHOD -------------------------------------------------------*/ \
+/*- NON-CONST MEMBER FUNCTION ----------------------------------------------*/ \
                                                                                \
 template<typename _Return, typename... _Args>                                  \
 class HasMemberFunction_##member<void, _Return(_Args...)> {                    \
@@ -116,7 +116,7 @@ class HasMemberFunction_##member<_Klass, _Return(_Args...)>                    \
                                   _Return(_Args...)>::value;                   \
 };                                                                             \
                                                                                \
-/*- CONST METHOD -----------------------------------------------------------*/ \
+/*- CONST MEMBER FUNCTION --------------------------------------------------*/ \
                                                                                \
 template<typename _Return, typename... _Args>                                  \
 class HasMemberFunction_##member<void, const _Return(_Args...)> {              \
@@ -176,7 +176,7 @@ struct has_member_function_##member<_Klass, _Return(_Args...)>                 \
 template<typename _Klass, typename Dummy>                                      \
 class HasStaticMemberFunction_##member;                                        \
                                                                                \
-/*- STATIC METHOD ----------------------------------------------------------*/ \
+/*- STATIC MEMBER FUNCTION -------------------------------------------------*/ \
                                                                                \
 template<typename _Return, typename... _Args>                                  \
 class HasStaticMemberFunction_##member<void, _Return(_Args...)> {              \
