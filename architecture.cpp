@@ -200,7 +200,7 @@ template <typename T>
 using non_const_return_t = typename non_const_return<T>::type;
 
 template<typename T>
-non_const_return_t<T> cast_to_non_const(T t) {
+non_const_return_t<T> non_const_cast(T t) {
     return (non_const_return_t<T>) t;
 }
 
@@ -243,8 +243,8 @@ struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
 GENERATE_HAS_MEMBER_METHOD(method);                                            \
                                                                                \
 template<typename... Args>                                                     \
-inline auto method##Impl(Args... args) const                                   \
-    -> decltype(cast_to_non_const(this)->method(args...)) {                    \
+inline auto method##Impl(Args&&... args) const                                 \
+    -> decltype(non_const_cast(this)->method(std::forward<Args>(args)...)) {   \
                                                                                \
   using MethodType = typename inject_first_parameter<                          \
     std::shared_ptr<class_of_t<decltype(this)>>,                               \
@@ -261,32 +261,32 @@ inline auto method##Impl(Args... args) const                                   \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
-inline auto method##Impl(Args... args)                                         \
-    -> decltype(this->method(args...)) {                                       \
+inline auto method##Impl(Args&&... args)                                       \
+    -> decltype(this->method(std::forward<Args>(args)...)) {                   \
   return (non_const_return_t<decltype(this->method(args...))>) (               \
     static_cast<const class_of_t<decltype(this)> *>(this)->method##Impl(       \
       std::forward<Args>(args)...));                                           \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
-inline auto method##Impl(no_##method##_tag, Args... args) const                \
-    -> decltype(cast_to_non_const(this)->method(args...)) {                    \
+inline auto method##Impl(no_##method##_tag, Args&&... args) const              \
+    -> decltype(non_const_cast(this)->method(std::forward<Args>(args)...)) {   \
   static_assert(always_false<decltype(this)>::value,                           \
                 "Missing implementation of member function '" #method "'!");   \
   throw std::logic_error("Calling from base class with no 'method'");          \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
-inline auto method##Impl(no_##method##_tag, Args... args)                      \
-    -> decltype(this->method(args...)) {                                       \
+inline auto method##Impl(no_##method##_tag, Args&&... args)                    \
+    -> decltype(this->method(std::forward<Args>(args)...)) {                   \
   return (non_const_return_t<decltype(this->method(args...))>) (               \
     static_cast<const class_of_t<decltype(this)>*>(this)->method##Impl(        \
       no_##method##_tag(), std::forward<Args>(args)...));                      \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
-inline auto method##Impl(has_##method##_tag, Args... args) const               \
-    -> decltype(cast_to_non_const(this)->method(args...)) {                    \
+inline auto method##Impl(has_##method##_tag, Args&&... args) const             \
+    -> decltype(non_const_cast(this)->method(std::forward<Args>(args)...)) {   \
   return (this->delegatedObject)->method(                                      \
     std::static_pointer_cast<class_of_t<decltype(this)>>(                      \
       const_cast<class_of_t<decltype(this)>*>(this)->shared_from_this()),      \
@@ -294,8 +294,8 @@ inline auto method##Impl(has_##method##_tag, Args... args) const               \
 }                                                                              \
                                                                                \
 template<typename... Args>                                                     \
-inline auto method##Impl(has_##method##_tag, Args... args)                     \
-    -> decltype(this->method(args...)) {                                       \
+inline auto method##Impl(has_##method##_tag, Args&&... args)                   \
+    -> decltype(this->method(std::forward<Args>(args)...)) {                   \
   return (non_const_return_t<decltype(this->method(args...))>) (               \
     static_cast<const class_of_t<decltype(this)>*>(this)->method##Impl(        \
       has_##method##_tag(), std::forward<Args>(args)...));                     \
