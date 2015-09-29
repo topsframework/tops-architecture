@@ -13,6 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // Standard headers
+#include <tuple>
 #include <memory>
 #include <string>
 #include <vector>
@@ -830,7 +831,56 @@ class SimpleCreator : public Creator<T, M> {
   }
 
   MPtr createAlt() const override {
-    throw std::logic_error("Should not be called");
+    throw std::logic_error("Cannot create M without parameters");
+  }
+};
+
+/* CLASS CachedCreator ********************************************************/
+
+// Forward declaration
+template<typename T, typename M, typename... Params>
+class CachedCreator;
+
+// Alias
+template<typename T, typename M, typename... Params>
+using CachedCreatorPtr = std::shared_ptr<CachedCreator<T, M, Params...>>;
+
+/**
+ * @class CachedCreator
+ * Cached implementation of Creator front-end
+ */
+template<typename T, typename M, typename... Params>
+class CachedCreator : public SimpleCreator<T, M> {
+ public:
+  // Alias
+  using MPtr = std::shared_ptr<M>;
+  using Self = CachedCreator<T, M, Params...>;
+  using SelfPtr = std::shared_ptr<Self>;
+
+  // Static methods
+  template<typename... Args>
+  static SelfPtr make(Args&&... args) {
+    return SelfPtr(new Self(std::forward<Args>(args)...));
+  }
+
+ protected:
+  // Instance variables
+  std::tuple<Params...> _params;
+
+  // Constructors
+  CachedCreator(Params&&... params)
+    : _params(std::forward<Params>(params)...) {
+  }
+
+  // Overriden methods
+  MPtr createAlt() const override {
+    CreatorPtr<T, M> ptr = std::static_pointer_cast<Self>(
+      const_cast<Self*>(this)->shared_from_this());
+
+    auto func = std::function<MPtr(CreatorPtr<T, M>, Params...)>(
+      static_cast<MPtr(*)(CreatorPtr<T, M>, Params...)>(&M::create));
+
+    return call(func, ptr, _params);
   }
 };
 
