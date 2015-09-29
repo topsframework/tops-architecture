@@ -88,18 +88,18 @@ struct has_type_##member                                                       \
 #define GENERATE_HAS_MEMBER_FUNCTION(member)                                   \
                                                                                \
 template<typename _Klass, typename Dummy>                                      \
-class HasMethod_##member;                                                      \
+class HasMemberFunction_##member;                                              \
                                                                                \
 /*- NON-CONST METHOD -------------------------------------------------------*/ \
                                                                                \
 template<typename _Return, typename... _Args>                                  \
-class HasMethod_##member<void, _Return(_Args...)> {                            \
+class HasMemberFunction_##member<void, _Return(_Args...)> {                    \
  public:                                                                       \
   static constexpr bool value = false;                                         \
 };                                                                             \
                                                                                \
 template<typename _Klass, typename _Return, typename... _Args>                 \
-class HasMethod_##member<_Klass, _Return(_Args...)>                            \
+class HasMemberFunction_##member<_Klass, _Return(_Args...)>                    \
 {                                                                              \
  private:                                                                      \
   template<typename _U, _U> class Check;                                       \
@@ -112,19 +112,20 @@ class HasMethod_##member<_Klass, _Return(_Args...)>                            \
                                                                                \
  public:                                                                       \
   static constexpr bool value = decltype(test<_Klass>(nullptr))::value         \
-    || HasMethod_##member<typename _Klass::Base, _Return(_Args...)>::value;    \
+    || HasMemberFunction_##member<typename _Klass::Base,                       \
+                                  _Return(_Args...)>::value;                   \
 };                                                                             \
                                                                                \
 /*- CONST METHOD -----------------------------------------------------------*/ \
                                                                                \
 template<typename _Return, typename... _Args>                                  \
-class HasMethod_##member<void, const _Return(_Args...)> {                      \
+class HasMemberFunction_##member<void, const _Return(_Args...)> {              \
  public:                                                                       \
   static constexpr bool value = false;                                         \
 };                                                                             \
                                                                                \
 template<typename _Klass, typename _Return, typename... _Args>                 \
-class HasMethod_##member<_Klass, const _Return(_Args...)>                      \
+class HasMemberFunction_##member<_Klass, const _Return(_Args...)>              \
 {                                                                              \
  private:                                                                      \
   template<typename _U, _U> class Check;                                       \
@@ -138,7 +139,7 @@ class HasMethod_##member<_Klass, const _Return(_Args...)>                      \
                                                                                \
  public:                                                                       \
   static constexpr bool value = decltype(test<_Klass>(nullptr))::value         \
-    || HasMethod_##member<typename _Klass::Base,                               \
+    || HasMemberFunction_##member<typename _Klass::Base,                       \
                           const _Return(_Args...)>::value;                     \
 };                                                                             \
                                                                                \
@@ -150,15 +151,18 @@ struct has_##member##_tag {};                                                  \
 /*- TYPE TRAIT -------------------------------------------------------------*/ \
                                                                                \
 template<typename _Klass, typename Dummy>                                      \
-struct has_method_##member;                                                    \
+struct has_member_function_##member;                                           \
                                                                                \
 template<typename _Klass, typename _Return, typename... _Args>                 \
-struct has_method_##member<_Klass, _Return(_Args...)>                          \
-    : public std::integral_constant<                                           \
-               bool, HasMethod_##member<_Klass, _Return(_Args...)>::value> {   \
+struct has_member_function_##member<_Klass, _Return(_Args...)>                 \
+    : public std::integral_constant<bool, HasMemberFunction_##member<          \
+                                            _Klass, _Return(_Args...)          \
+                                          >::value> {                          \
                                                                                \
   using tag = typename std::conditional<                                       \
-                has_method_##member<_Klass, _Return(_Args...)>::value,         \
+                has_member_function_##member<                                  \
+                  _Klass, _Return(_Args...)                                    \
+                >::value,                                                      \
                 has_##member##_tag, no_##member##_tag                          \
               >::type;                                                         \
 }
@@ -170,18 +174,18 @@ struct has_method_##member<_Klass, _Return(_Args...)>                          \
 #define GENERATE_HAS_STATIC_MEMBER_FUNCTION(member)                            \
                                                                                \
 template<typename _Klass, typename Dummy>                                      \
-class HasStaticMethod_##member;                                                \
+class HasStaticMemberFunction_##member;                                        \
                                                                                \
 /*- STATIC METHOD ----------------------------------------------------------*/ \
                                                                                \
 template<typename _Return, typename... _Args>                                  \
-class HasStaticMethod_##member<void, _Return(_Args...)> {                      \
+class HasStaticMemberFunction_##member<void, _Return(_Args...)> {              \
  public:                                                                       \
   static constexpr bool value = false;                                         \
 };                                                                             \
                                                                                \
 template<typename _Klass, typename _Return, typename... _Args>                 \
-class HasStaticMethod_##member<_Klass, _Return(_Args...)>                      \
+class HasStaticMemberFunction_##member<_Klass, _Return(_Args...)>              \
 {                                                                              \
  private:                                                                      \
   template<typename _U, _U> class Check;                                       \
@@ -194,7 +198,7 @@ class HasStaticMethod_##member<_Klass, _Return(_Args...)>                      \
                                                                                \
  public:                                                                       \
   static constexpr bool value = decltype(test<_Klass>(nullptr))::value         \
-    || HasStaticMethod_##member<typename _Klass::Base,                         \
+    || HasStaticMemberFunction_##member<typename _Klass::Base,                 \
                                 _Return(_Args...)>::value;                     \
 };                                                                             \
                                                                                \
@@ -206,15 +210,18 @@ struct has_##member##_tag {};                                                  \
 /*- TYPE TRAIT -------------------------------------------------------------*/ \
                                                                                \
 template<typename _Klass, typename Dummy>                                      \
-struct has_static_method_##member;                                             \
+struct has_static_member_function_##member;                                    \
                                                                                \
 template<typename _Klass, typename _Return, typename... _Args>                 \
-struct has_static_method_##member<_Klass, _Return(_Args...)>                   \
-    : public std::integral_constant<bool,                                      \
-               HasStaticMethod_##member<_Klass, _Return(_Args...)>::value> {   \
+struct has_static_member_function_##member<_Klass, _Return(_Args...)>          \
+    : public std::integral_constant<bool, HasStaticMemberFunction_##member<    \
+                                            _Klass, _Return(_Args...)          \
+                                          >::value> {                          \
                                                                                \
   using tag = typename std::conditional<                                       \
-                has_static_method_##member<_Klass, _Return(_Args...)>::value,  \
+                has_static_member_function_##member<                           \
+                  _Klass, _Return(_Args...)                                    \
+                >::value,                                                      \
                 has_##member##_tag, no_##member##_tag                          \
               >::type;                                                         \
 }
@@ -332,7 +339,8 @@ inline auto method##Impl(Args&&... args) const                                 \
   >::type::element_type;                                                       \
                                                                                \
   return method##Impl(                                                         \
-    typename has_method_##method<DelegatedType, MethodType>::tag(),            \
+    typename has_member_function_##method<DelegatedType,                       \
+                                          MethodType>::tag(),                  \
     std::forward<Args>(args)...);                                              \
 }                                                                              \
                                                                                \
@@ -404,7 +412,8 @@ inline auto method##Impl(Args&&... args) const                                 \
   using DelegatedType = delegatedClass;                                        \
                                                                                \
   return method##Impl(                                                         \
-    typename has_static_method_##method<DelegatedType, MethodType>::tag(),     \
+    typename has_static_member_function_##method<DelegatedType,                \
+                                                 MethodType>::tag(),           \
     std::forward<Args>(args)...);                                              \
 }                                                                              \
                                                                                \
