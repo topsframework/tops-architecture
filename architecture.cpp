@@ -1174,6 +1174,9 @@ class BarDerived : public BarCrtp<BarDerived> {
   using Self = BarDerived;
   using SelfPtr = std::shared_ptr<Self>;
 
+  using State = BarDerived;
+  using StatePtr = BarDerivedPtr;
+
   // Static methods
   template<typename... Args>
   static SelfPtr make(Args&&... args) {
@@ -1198,8 +1201,8 @@ class BarDerived : public BarCrtp<BarDerived> {
 
   // Constructors
   BarDerived(const std::string &text = {},
-             const std::vector<BarPtr>& bars = {})
-      : BarCrtp(text), _bars(bars) {
+             const std::vector<StatePtr>& states = {})
+      : BarCrtp(text), _states(states) {
   }
 
   // Overriden methods
@@ -1238,13 +1241,13 @@ class BarDerived : public BarCrtp<BarDerived> {
 
  private:
   // Instance variables
-  std::vector<BarPtr> _bars;
+  std::vector<StatePtr> _states;
 
   // Concrete methods
   void compose_accept(SimpleAcceptorPtr<BarDerived> acceptor,
                       const Acceptor::traversal& type) {
-    for (auto bar : _bars)
-      bar->acceptor(acceptor->visitor())->accept(type);
+    for (auto state : _states)
+      state->acceptor(acceptor->visitor())->accept(type);
   }
 };
 
@@ -1527,7 +1530,7 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "=====================" << std::endl;
 
   auto composite = BarDerived::make(
-    "", std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
+    "", std::vector<BarDerivedPtr>{ BarDerived::make(), BarDerived::make() }
   );
 
   composite->acceptor(ConcreteVisitor::make())->accept();
