@@ -1001,6 +1001,18 @@ class TopCrtp
   // Instance variables
   std::string _text;
 
+  // Static methods
+  static std::string buildMessage(const std::vector<std::string> &words,
+                                  const std::string &divisor) {
+    std::string text;
+    if (!words.empty()) {
+      for (unsigned int i = 0; i < words.size()-1; i++)
+        text += words[i] + divisor;
+      text += words.back();
+    }
+    return text;
+  }
+
   // Constructors
   TopCrtp(const std::string &text = {})
     : _text(text) {
@@ -1040,19 +1052,11 @@ class Baz : public TopCrtp<Baz> {
   }
 
   static SelfPtr create(CreatorPtr<Target, Self> creator, creator_newline_tag) {
-    std::string text;
-    for (unsigned int i = 0; i < creator->words().size()-1; i++)
-      text += creator->words()[i] + "\n";
-    text += creator->words().back();
-    return Self::make(text);
+    return Self::make(buildMessage(creator->words(), "\n"));
   }
 
   static SelfPtr create(CreatorPtr<Target, Self> creator, creator_space_tag) {
-    std::string text;
-    for (unsigned int i = 0; i < creator->words().size()-1; i++)
-      text += creator->words()[i] + " ";
-    text += creator->words().back();
-    return Self::make(text);
+    return Self::make(buildMessage(creator->words(), " "));
   }
 
  protected:
@@ -1263,17 +1267,6 @@ class BarDerived : public BarCrtp<BarDerived> {
   std::vector<StatePtr> _states;
 
   // Static methods
-  static std::string buildMessage(const std::vector<std::string> &words,
-                                  const std::string &divisor) {
-    std::string text;
-    if (!words.empty()) {
-      for (unsigned int i = 0; i < words.size()-1; i++)
-        text += words[i] + divisor;
-      text += words.back();
-    }
-    return text;
-  }
-
   static std::vector<StatePtr> initializeStates(
       const std::vector<CreatorPtr<Target, State>> &state_creators,
       const std::vector<std::string> &words) {
@@ -1327,19 +1320,11 @@ class BarReusing : public BarCrtp<BarReusing> {
   }
 
   static SelfPtr create(CreatorPtr<Target, Self> creator, creator_newline_tag) {
-    std::string text;
-    for (unsigned int i = 0; i < creator->words().size()-1; i++)
-      text += creator->words()[i] + "\r\n";
-    text += creator->words().back();
-    return Self::make(text);
+    return Self::make(buildMessage(creator->words(), "\r\n"));
   }
 
   static SelfPtr create(CreatorPtr<Target, Self> creator, creator_tab_tag) {
-    std::string text;
-    for (unsigned int i = 0; i < creator->words().size()-1; i++)
-      text += creator->words()[i] + "\t";
-    text += creator->words().back();
-    return Self::make(text);
+    return Self::make(buildMessage(creator->words(), "\t"));
   }
 
  protected:
