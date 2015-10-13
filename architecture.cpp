@@ -1388,6 +1388,40 @@ class FooVisitor : public Visitor {
   }
 };
 
+/* CLASS DumpVisitor **********************************************************/
+
+// Forward declaration
+class DumpVisitor;
+
+// Alias
+using DumpVisitorPtr = std::shared_ptr<DumpVisitor>;
+
+/**
+ * @class DumpVisitor
+ * Concrete implementation of main hierarchy visitor calling method dump
+ */
+class DumpVisitor : public Visitor {
+ public:
+  // Static methods
+  template<typename... Args>
+  static DumpVisitorPtr make(Args&&... args) {
+    return DumpVisitorPtr(new DumpVisitor(std::forward<Args>(args)...));
+  }
+
+  // Overriden methods
+  void visit(std::shared_ptr<Baz> top) override {
+    top->dump();
+  }
+
+  void visit(std::shared_ptr<BarDerived> top) override {
+    top->dump();
+  }
+
+  void visit(std::shared_ptr<BarReusing> top) override {
+    top->dump();
+  }
+};
+
 /*
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  -------------------------------------------------------------------------------
@@ -1575,11 +1609,6 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "# Test Visitor front-end #" << std::endl;
   std::cout << "##########################" << std::endl;
 
-  /**/ std::cout << std::endl; /*---------------------------------------------*/
-
-  std::cout << "Test FooVisitor" << std::endl;
-  std::cout << "================" << std::endl;
-
   auto composite_creator = BarDerived::targetCreator(
     creator_space_tag{},
     std::vector<CreatorPtr<Target, BarDerived::State>>{
@@ -1598,7 +1627,20 @@ int main(int /* argc */, char ** /* argv */) {
   }
 
   auto composite = composite_creator->create();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test FooVisitor" << std::endl;
+  std::cout << "================" << std::endl;
+
   composite->acceptor(FooVisitor::make())->accept();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test DumpVisitor" << std::endl;
+  std::cout << "=================" << std::endl;
+
+  composite->acceptor(DumpVisitor::make())->accept();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
