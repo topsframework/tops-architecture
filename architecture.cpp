@@ -302,18 +302,16 @@ struct inject_first_parameter<Ptr, Result(Klass::*)(Args...) const> {
 /*                              CONTAINER UNPACK                              */
 /*============================================================================*/
 
-template<typename Return, template<typename...> class Pack,
+template<typename Func, template<typename...> class Pack,
          typename Ptr, typename... Args, std::size_t... I>
-Return call_helper(const std::function<Return(Ptr, Args...)> &func,
-                   const Ptr &ptr, const Pack<Args...> &params,
+auto call_helper(const Func &func, const Ptr &ptr, const Pack<Args...> &params,
                    std::index_sequence<I...>) {
   return func(ptr, std::get<I>(params)...);
 }
 
-template<typename Return, template<typename...> class Pack,
+template<typename Func, template<typename...> class Pack,
          typename Ptr, typename... Args>
-Return call(const std::function<Return(Ptr, Args...)> &func,
-            const Ptr &ptr, const Pack<Args...> &params) {
+auto call(const Func &func, const Ptr &ptr, const Pack<Args...> &params) {
   return call_helper(func, ptr, params, std::index_sequence_for<Args...>{});
 }
 
@@ -838,8 +836,9 @@ class CachedCreator : public SimpleCreator<T, M> {
     CreatorPtr<T, M> ptr = std::static_pointer_cast<Self>(
       const_cast<Self*>(this)->shared_from_this());
 
-    auto func = std::function<MPtr(CreatorPtr<T, M>, Params...)>(
-      static_cast<MPtr(*)(CreatorPtr<T, M>, Params...)>(&M::create));
+    auto func = [](auto&&... args) {
+      return M::create(std::forward<decltype(args)>(args)...);
+    };
 
     return call(func, ptr, _params);
   }
@@ -1183,7 +1182,9 @@ class BarDerived : public BarCrtp<BarDerived> {
     return SelfPtr(new Self(std::forward<Args>(args)...));
   }
 
-  static SelfPtr create(CreatorPtr<Target, Self> creator, creator_carriage_tag) {
+  static SelfPtr create(
+      CreatorPtr<Target, Self> creator, creator_carriage_tag,
+      const std::vector<CreatorPtr<Target, State>> &/* state_creators */ = {}) {
     std::string text;
     if (!creator->words().empty()) {
       for (unsigned int i = 0; i < creator->words().size()-1; i++)
@@ -1193,7 +1194,9 @@ class BarDerived : public BarCrtp<BarDerived> {
     return Self::make(text);
   }
 
-  static SelfPtr create(CreatorPtr<Target, Self> creator, creator_newline_tag) {
+  static SelfPtr create(
+      CreatorPtr<Target, Self> creator, creator_newline_tag,
+      const std::vector<CreatorPtr<Target, State>> &/* state_creators */ = {}) {
     std::string text;
     if (!creator->words().empty()) {
       for (unsigned int i = 0; i < creator->words().size()-1; i++)
