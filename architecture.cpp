@@ -353,6 +353,9 @@ do { return method##Impl(__VA_ARGS__); } while (false)
 
 #define GENERATE_STATIC_MEMBER_FUNCTION_DELEGATOR(method, delegatedClass)      \
                                                                                \
+GENERATE_HAS_STATIC_MEMBER_FUNCTION(delegate);                                 \
+GENERATE_HAS_STATIC_MEMBER_FUNCTION(method##Alt);                              \
+                                                                               \
 template<typename... Args>                                                     \
 inline auto method##Impl(Args&&... args) const                                 \
     -> decltype(non_const_cast(this)->method(std::forward<Args>(args)...)) {   \
@@ -381,6 +384,50 @@ inline auto method##Impl() const                                               \
                                                                                \
 inline auto method##Impl()                                                     \
     -> decltype(this->method()) {                                              \
+  return (non_const_return_t<decltype(this->method())>) (                      \
+    static_cast<const class_of_t<decltype(this)>*>(this)->method##Impl());     \
+}                                                                              \
+                                                                               \
+template<typename _T = void>                                                   \
+inline constexpr auto method##Alt(_T* = nullptr) const                         \
+    -> decltype(typename std::enable_if<                                       \
+                  !has_static_member_function_##method##Alt<                   \
+                    class_of_t<decltype(this)>, void()                         \
+                  >::value                                                     \
+                >::type(),                                                     \
+                non_const_cast(this)->method()) {                              \
+  throw std::logic_error("Cannot call '" #method "' without parameters");      \
+}                                                                              \
+                                                                               \
+template<typename _T = void>                                                   \
+inline constexpr auto method##Alt(_T* = nullptr)                               \
+    -> decltype(typename std::enable_if<                                       \
+                  !has_static_member_function_##method##Alt<                   \
+                    class_of_t<decltype(this)>, void()                         \
+                  >::value                                                     \
+                >::type(),                                                     \
+                non_const_cast(this)->method()) {                              \
+  return (non_const_return_t<decltype(this->method())>) (                      \
+    static_cast<const class_of_t<decltype(this)>*>(this)->method##Impl());     \
+}                                                                              \
+                                                                               \
+template<typename _T = void>                                                   \
+inline constexpr auto delegate(_T* = nullptr) const                            \
+    -> decltype(typename std::enable_if<                                       \
+                  !has_static_member_function_delegate<                        \
+                    class_of_t<decltype(this)>, void()                         \
+                  >::value                                                     \
+                >::type(), bool()) {                                           \
+  return true;                                                                 \
+}                                                                              \
+                                                                               \
+template<typename _T = void>                                                   \
+inline constexpr auto delegate(_T* = nullptr)                                  \
+    -> decltype(typename std::enable_if<                                       \
+                  !has_static_member_function_delegate<                        \
+                    class_of_t<decltype(this)>, void()                         \
+                  >::value                                                     \
+                >::type(), bool()) {                                           \
   return (non_const_return_t<decltype(this->method())>) (                      \
     static_cast<const class_of_t<decltype(this)>*>(this)->method##Impl());     \
 }
@@ -667,6 +714,7 @@ template<typename T, typename M>
 class Creator : public std::enable_shared_from_this<Creator<T, M>> {
  public:
   // Alias
+  using Base = void;
   using MPtr = std::shared_ptr<M>;
 
   // Purely virtual methods
@@ -706,7 +754,9 @@ template<typename T, typename M>
 class SimpleCreator : public Creator<T, M> {
  public:
   // Alias
+  using Base = Creator<T, M>;
   using MPtr = std::shared_ptr<M>;
+
   using Self = SimpleCreator<T, M>;
   using SelfPtr = std::shared_ptr<Self>;
 
@@ -762,7 +812,9 @@ template<typename T, typename M, typename... Params>
 class CachedCreator : public SimpleCreator<T, M> {
  public:
   // Alias
+  using Base = SimpleCreator<T, M>;
   using MPtr = std::shared_ptr<M>;
+
   using Self = CachedCreator<T, M, Params...>;
   using SelfPtr = std::shared_ptr<Self>;
 
@@ -803,7 +855,9 @@ template<typename T, typename M>
 class FixedCreator : public Creator<T, M> {
  public:
   // Alias
+  using Base = Creator<T, M>;
   using MPtr = std::shared_ptr<M>;
+
   using Self = FixedCreator;
   using SelfPtr = std::shared_ptr<Self>;
 
