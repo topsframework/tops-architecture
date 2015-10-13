@@ -1,4 +1,50 @@
 
+##########################
+# Test Creator front-end #
+##########################
+
+Test SimpleCreatorStrategy with Baz
+====================================
+This
+is
+a
+text
+This is a text
+
+Test CachedCreatorStrategy with Baz
+===================================
+This
+is
+a
+text
+This is a text
+
+Test FixedCreatorStrategy with Baz
+===================================
+Predefined text
+Predefined text
+
+Test SimpleCreatorStrategy with BarDerived
+===========================================
+This
+is
+a
+text
+Thisisatext
+
+Test CachedCreatorStrategy with BarDerived
+===========================================
+This
+is
+a
+text
+Thisisatext
+
+Test FixedCreatorStrategy with BarDerived
+==========================================
+Predefined text
+Predefined text
+
 ######################
 # Test Foo front-end #
 ######################
@@ -51,50 +97,4 @@ Running cached for Target in BarDerived
 Cache: d
 Running cached for Target in BarCrtp
 Cache: i
-
-##########################
-# Test Creator front-end #
-##########################
-
-Test SimpleCreatorStrategy with Baz
-====================================
-This
-is
-a
-text
-This is a text
-
-Test CachedCreatorStrategy with Baz
-===================================
-This
-is
-a
-text
-This is a text
-
-Test FixedCreatorStrategy with Baz
-===================================
-Predefined text
-Predefined text
-
-Test SimpleCreatorStrategy with BarDerived
-===========================================
-This
-is
-a
-text
-Thisisatext
-
-Test CachedCreatorStrategy with BarDerived
-===========================================
-This
-is
-a
-text
-Thisisatext
-
-Test FixedCreatorStrategy with BarDerived
-==========================================
-Predefined text
-Predefined text
 

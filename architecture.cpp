@@ -1348,67 +1348,6 @@ int main(int /* argc */, char ** /* argv */) {
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
-  std::cout << "######################" << std::endl;
-  std::cout << "# Test Foo front-end #" << std::endl;
-  std::cout << "######################" << std::endl;
-
-  /**/ std::cout << std::endl; /*---------------------------------------------*/
-
-  std::cout << "Test BarDerived" << std::endl;
-  std::cout << "================" << std::endl;
-  auto bar_derived = BarDerived::make();
-  bar_derived->targetFoo(false)->method();
-  bar_derived->targetFoo(true)->method();
-  bar_derived->spotFoo(false)->method();
-  bar_derived->spotFoo(true)->method();
-
-  /**/ std::cout << std::endl; /*---------------------------------------------*/
-
-  std::cout << "Test BarDerived casted to Bar" << std::endl;
-  std::cout << "==============================" << std::endl;
-  static_cast<BarPtr>(bar_derived)->targetFoo(false)->method();
-  static_cast<BarPtr>(bar_derived)->targetFoo(true)->method();
-  static_cast<BarPtr>(bar_derived)->spotFoo(false)->method();
-  static_cast<BarPtr>(bar_derived)->spotFoo(true)->method();
-
-  /**/ std::cout << std::endl; /*---------------------------------------------*/
-
-  std::cout << "Test BarReusing" << std::endl;
-  std::cout << "================" << std::endl;
-  auto bar_reusing = BarReusing::make();
-  bar_reusing->targetFoo(false)->method();
-  bar_reusing->targetFoo(true)->method();
-  bar_reusing->spotFoo(false)->method();
-  bar_reusing->spotFoo(true)->method();
-
-  /**/ std::cout << std::endl; /*---------------------------------------------*/
-
-  std::cout << "Test BarReusing casted to Bar" << std::endl;
-  std::cout << "==============================" << std::endl;
-  static_cast<BarPtr>(bar_reusing)->targetFoo(false)->method();
-  static_cast<BarPtr>(bar_reusing)->targetFoo(true)->method();
-  static_cast<BarPtr>(bar_reusing)->spotFoo(false)->method();
-  static_cast<BarPtr>(bar_reusing)->spotFoo(true)->method();
-
-  /**/ std::cout << std::endl; /*---------------------------------------------*/
-
-  std::cout << "##########################" << std::endl;
-  std::cout << "# Test Visitor front-end #" << std::endl;
-  std::cout << "##########################" << std::endl;
-
-  /**/ std::cout << std::endl; /*---------------------------------------------*/
-
-  std::cout << "Test ConcreteVisitor" << std::endl;
-  std::cout << "=====================" << std::endl;
-
-  auto composite = BarDerived::make(
-    "", std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
-  );
-
-  composite->acceptor(ConcreteVisitor::make())->accept();
-
-  /**/ std::cout << std::endl; /*---------------------------------------------*/
-
   std::cout << "##########################" << std::endl;
   std::cout << "# Test Creator front-end #" << std::endl;
   std::cout << "##########################" << std::endl;
@@ -1531,6 +1470,67 @@ int main(int /* argc */, char ** /* argv */) {
   auto fixed_created_bar_derived_with_carriage
     = bar_derived_fixed_creator->create(creator_carriage_tag{});
   fixed_created_bar_derived_with_carriage->dump();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "######################" << std::endl;
+  std::cout << "# Test Foo front-end #" << std::endl;
+  std::cout << "######################" << std::endl;
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test BarDerived" << std::endl;
+  std::cout << "================" << std::endl;
+  auto bar_derived = BarDerived::make();
+  bar_derived->targetFoo(false)->method();
+  bar_derived->targetFoo(true)->method();
+  bar_derived->spotFoo(false)->method();
+  bar_derived->spotFoo(true)->method();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test BarDerived casted to Bar" << std::endl;
+  std::cout << "==============================" << std::endl;
+  static_cast<BarPtr>(bar_derived)->targetFoo(false)->method();
+  static_cast<BarPtr>(bar_derived)->targetFoo(true)->method();
+  static_cast<BarPtr>(bar_derived)->spotFoo(false)->method();
+  static_cast<BarPtr>(bar_derived)->spotFoo(true)->method();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test BarReusing" << std::endl;
+  std::cout << "================" << std::endl;
+  auto bar_reusing = BarReusing::make();
+  bar_reusing->targetFoo(false)->method();
+  bar_reusing->targetFoo(true)->method();
+  bar_reusing->spotFoo(false)->method();
+  bar_reusing->spotFoo(true)->method();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test BarReusing casted to Bar" << std::endl;
+  std::cout << "==============================" << std::endl;
+  static_cast<BarPtr>(bar_reusing)->targetFoo(false)->method();
+  static_cast<BarPtr>(bar_reusing)->targetFoo(true)->method();
+  static_cast<BarPtr>(bar_reusing)->spotFoo(false)->method();
+  static_cast<BarPtr>(bar_reusing)->spotFoo(true)->method();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "##########################" << std::endl;
+  std::cout << "# Test Visitor front-end #" << std::endl;
+  std::cout << "##########################" << std::endl;
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test ConcreteVisitor" << std::endl;
+  std::cout << "=====================" << std::endl;
+
+  auto composite = BarDerived::make(
+    "", std::vector<BarPtr>{ BarDerived::make(), BarReusing::make() }
+  );
+
+  composite->acceptor(ConcreteVisitor::make())->accept();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
