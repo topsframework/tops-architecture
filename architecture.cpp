@@ -1186,7 +1186,7 @@ class BarDerived : public BarCrtp<BarDerived> {
       CreatorPtr<Target, Self> creator, creator_carriage_tag,
       const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
 
-    std::string text = buildMessage(creator->words(), '\r');
+    std::string text = buildMessage(creator->words(), "\r");
 
     std::vector<StatePtr> states
       = initializeStates(state_creators, creator->words());
@@ -1198,7 +1198,7 @@ class BarDerived : public BarCrtp<BarDerived> {
       CreatorPtr<Target, Self> creator, creator_newline_tag,
       const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
 
-    std::string text = buildMessage(creator->words(), '\n');
+    std::string text = buildMessage(creator->words(), "\n");
 
     std::vector<StatePtr> states
       = initializeStates(state_creators, creator->words());
@@ -1210,7 +1210,7 @@ class BarDerived : public BarCrtp<BarDerived> {
       CreatorPtr<Target, Self> creator, creator_space_tag,
       const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
 
-    std::string text = buildMessage(creator->words(), ' ');
+    std::string text = buildMessage(creator->words(), " ");
 
     std::vector<StatePtr> states
       = initializeStates(state_creators, creator->words());
@@ -1264,7 +1264,7 @@ class BarDerived : public BarCrtp<BarDerived> {
 
   // Static methods
   static std::string buildMessage(const std::vector<std::string> &words,
-                                  char divisor) {
+                                  const std::string &divisor) {
     std::string text;
     if (!words.empty()) {
       for (unsigned int i = 0; i < words.size()-1; i++)
