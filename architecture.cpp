@@ -1581,10 +1581,10 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "================" << std::endl;
 
   auto composite_creator = BarDerived::targetCreator(
-    creator_newline_tag{},
+    creator_space_tag{},
     std::vector<CreatorPtr<Target, BarDerived::State>>{
-      BarDerived::targetCreator(creator_newline_tag{}),
-      BarDerived::targetCreator(creator_newline_tag{})
+      BarDerived::targetCreator(creator_carriage_tag{}),
+      BarDerived::targetCreator(creator_space_tag{})
     }
   );
 
