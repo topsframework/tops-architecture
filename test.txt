@@ -89,8 +89,8 @@ Cache: i
 # Test Visitor front-end #
 ##########################
 
-Test FooVisitor
-================
+Test FooVisitor in pre-order
+============================e=
 Running cached for Target in BarDerived
 Cache: d
 Running cached for Target in BarDerived
@@ -98,8 +98,23 @@ Cache: d
 Running cached for Target in BarDerived
 Cache: d
 
-Test DumpVisitor
-=================
+Test FooVisitor in post-order
+==============================
+Running cached for Target in BarDerived
+Cache: d
+Running cached for Target in BarDerived
+Cache: d
+Running cached for Target in BarDerived
+Cache: d
+
+Test DumpVisitor in pre-order
+==============================
+acegikmoqsuwy
+b d f h j l n p r t v x z
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+
+Test DumpVisitor in post-order
+===============================
 a b c d e f g h i j k l m n o p q r s t u v w x y z
 acegikmoqsuwy
 b d f h j l n p r t v x z

@@ -1630,17 +1630,31 @@ int main(int /* argc */, char ** /* argv */) {
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
-  std::cout << "Test FooVisitor" << std::endl;
-  std::cout << "================" << std::endl;
+  std::cout << "Test FooVisitor in pre-order" << std::endl;
+  std::cout << "============================e=" << std::endl;
 
-  composite->acceptor(FooVisitor::make())->accept();
+  composite->acceptor(FooVisitor::make())->pre_order();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
-  std::cout << "Test DumpVisitor" << std::endl;
-  std::cout << "=================" << std::endl;
+  std::cout << "Test FooVisitor in post-order" << std::endl;
+  std::cout << "==============================" << std::endl;
 
-  composite->acceptor(DumpVisitor::make())->accept();
+  composite->acceptor(FooVisitor::make())->post_order();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test DumpVisitor in pre-order" << std::endl;
+  std::cout << "==============================" << std::endl;
+
+  composite->acceptor(DumpVisitor::make())->pre_order();
+
+  /**/ std::cout << std::endl; /*---------------------------------------------*/
+
+  std::cout << "Test DumpVisitor in post-order" << std::endl;
+  std::cout << "===============================" << std::endl;
+
+  composite->acceptor(DumpVisitor::make())->post_order();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
