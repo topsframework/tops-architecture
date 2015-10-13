@@ -1185,17 +1185,21 @@ class BarDerived : public BarCrtp<BarDerived> {
 
   static SelfPtr create(CreatorPtr<Target, Self> creator, creator_carriage_tag) {
     std::string text;
-    for (unsigned int i = 0; i < creator->words().size()-1; i++)
-      text += creator->words()[i] + "\r";
-    text += creator->words().back();
+    if (!creator->words().empty()) {
+      for (unsigned int i = 0; i < creator->words().size()-1; i++)
+        text += creator->words()[i] + "\r";
+      text += creator->words().back();
+    }
     return Self::make(text);
   }
 
   static SelfPtr create(CreatorPtr<Target, Self> creator, creator_newline_tag) {
     std::string text;
-    for (unsigned int i = 0; i < creator->words().size()-1; i++)
-      text += creator->words()[i] + "\n";
-    text += creator->words().back();
+    if (!creator->words().empty()) {
+      for (unsigned int i = 0; i < creator->words().size()-1; i++)
+        text += creator->words()[i] + "\n";
+      text += creator->words().back();
+    }
     return Self::make(text);
   }
 
