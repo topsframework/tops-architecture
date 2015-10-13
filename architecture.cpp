@@ -1189,37 +1189,28 @@ class BarDerived : public BarCrtp<BarDerived> {
   static SelfPtr create(
       CreatorPtr<Target, Self> creator, creator_carriage_tag,
       const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
-
-    std::string text = buildMessage(creator->words(), "\r");
-
-    std::vector<StatePtr> states
-      = initializeStates(state_creators, creator->words());
-
-    return Self::make(text, states);
+    return Self::make(
+      buildMessage(creator->words(), "\r"),
+      initializeStates(state_creators, creator->words())
+    );
   }
 
   static SelfPtr create(
       CreatorPtr<Target, Self> creator, creator_newline_tag,
       const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
-
-    std::string text = buildMessage(creator->words(), "\n");
-
-    std::vector<StatePtr> states
-      = initializeStates(state_creators, creator->words());
-
-    return Self::make(text, states);
+    return Self::make(
+      buildMessage(creator->words(), "\n"),
+      initializeStates(state_creators, creator->words())
+    );
   }
 
   static SelfPtr create(
       CreatorPtr<Target, Self> creator, creator_space_tag,
       const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
-
-    std::string text = buildMessage(creator->words(), " ");
-
-    std::vector<StatePtr> states
-      = initializeStates(state_creators, creator->words());
-
-    return Self::make(text, states);
+    return Self::make(
+      buildMessage(creator->words(), " "),
+      initializeStates(state_creators, creator->words())
+    );
   }
 
   // Constructors
