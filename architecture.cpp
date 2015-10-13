@@ -1206,6 +1206,18 @@ class BarDerived : public BarCrtp<BarDerived> {
     return Self::make(text, states);
   }
 
+  static SelfPtr create(
+      CreatorPtr<Target, Self> creator, creator_space_tag,
+      const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
+
+    std::string text = buildMessage(creator->words(), ' ');
+
+    std::vector<StatePtr> states
+      = initializeStates(state_creators, creator->words());
+
+    return Self::make(text, states);
+  }
+
   // Constructors
   BarDerived(const std::string &text = {},
              const std::vector<StatePtr>& states = {})
