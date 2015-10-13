@@ -89,8 +89,8 @@ Cache: i
 # Test Visitor front-end #
 ##########################
 
-Test ConcreteVisitor
-=====================
+Test FooVisitor
+================
 Running cached for Target in BarDerived
 Cache: d
 Running cached for Target in BarDerived

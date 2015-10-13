@@ -1355,22 +1355,24 @@ class BarReusing : public BarCrtp<BarReusing> {
 ////////////////////////////////////////////////////////////////////////////////
 */
 
+/* CLASS FooVisitor ***********************************************************/
+
 // Forward declaration
-class ConcreteVisitor;
+class FooVisitor;
 
 // Alias
-using ConcreteVisitorPtr = std::shared_ptr<ConcreteVisitor>;
+using FooVisitorPtr = std::shared_ptr<FooVisitor>;
 
 /**
- * @class ConcreteVisitor
- * Concrete implementation of main hierarchy visitor
+ * @class FooVisitor
+ * Concrete implementation of main hierarchy visitor using Foo front-end
  */
-class ConcreteVisitor : public Visitor {
+class FooVisitor : public Visitor {
  public:
   // Static methods
   template<typename... Args>
-  static ConcreteVisitorPtr make(Args&&... args) {
-    return ConcreteVisitorPtr(new ConcreteVisitor(std::forward<Args>(args)...));
+  static FooVisitorPtr make(Args&&... args) {
+    return FooVisitorPtr(new FooVisitor(std::forward<Args>(args)...));
   }
 
   // Overriden methods
@@ -1575,8 +1577,8 @@ int main(int /* argc */, char ** /* argv */) {
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
-  std::cout << "Test ConcreteVisitor" << std::endl;
-  std::cout << "=====================" << std::endl;
+  std::cout << "Test FooVisitor" << std::endl;
+  std::cout << "================" << std::endl;
 
   auto composite_creator = BarDerived::targetCreator(
     creator_newline_tag{},
@@ -1596,7 +1598,7 @@ int main(int /* argc */, char ** /* argv */) {
   }
 
   auto composite = composite_creator->create();
-  composite->acceptor(ConcreteVisitor::make())->accept();
+  composite->acceptor(FooVisitor::make())->accept();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
 
