@@ -1192,6 +1192,13 @@ class BarDerived : public BarCrtp<BarDerived> {
       text += creator->words().back();
     }
 
+    if (!state_creators.empty()) {
+      unsigned int size = state_creators.size();
+      for (unsigned int i = 0; i < creator->words().size(); i++) {
+        state_creators[i % size]->add_word(creator->words()[i]);
+      }
+    }
+
     std::vector<StatePtr> states;
     for (const auto &state_creator : state_creators) {
       states.push_back(state_creator->create());
@@ -1208,6 +1215,13 @@ class BarDerived : public BarCrtp<BarDerived> {
       for (unsigned int i = 0; i < creator->words().size()-1; i++)
         text += creator->words()[i] + "\n";
       text += creator->words().back();
+    }
+
+    if (!state_creators.empty()) {
+      unsigned int size = state_creators.size();
+      for (unsigned int i = 0; i < creator->words().size(); i++) {
+        state_creators[i % size]->add_word(creator->words()[i]);
+      }
     }
 
     std::vector<StatePtr> states;
@@ -1555,6 +1569,15 @@ int main(int /* argc */, char ** /* argv */) {
       BarDerived::targetCreator(creator_newline_tag{})
     }
   );
+
+  std::vector<std::string> sample_words = {
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+  };
+
+  for (const auto& w : sample_words) {
+    composite_creator->add_word(w);
+  }
 
   auto composite = composite_creator->create();
   composite->acceptor(ConcreteVisitor::make())->accept();
