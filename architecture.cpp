@@ -1185,24 +1185,11 @@ class BarDerived : public BarCrtp<BarDerived> {
   static SelfPtr create(
       CreatorPtr<Target, Self> creator, creator_carriage_tag,
       const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
-    std::string text;
-    if (!creator->words().empty()) {
-      for (unsigned int i = 0; i < creator->words().size()-1; i++)
-        text += creator->words()[i] + "\r";
-      text += creator->words().back();
-    }
 
-    if (!state_creators.empty()) {
-      unsigned int size = state_creators.size();
-      for (unsigned int i = 0; i < creator->words().size(); i++) {
-        state_creators[i % size]->add_word(creator->words()[i]);
-      }
-    }
+    std::string text = buildMessage(creator->words(), '\r');
 
-    std::vector<StatePtr> states;
-    for (const auto &state_creator : state_creators) {
-      states.push_back(state_creator->create());
-    }
+    std::vector<StatePtr> states
+      = initializeStates(state_creators, creator->words());
 
     return Self::make(text, states);
   }
@@ -1210,24 +1197,11 @@ class BarDerived : public BarCrtp<BarDerived> {
   static SelfPtr create(
       CreatorPtr<Target, Self> creator, creator_newline_tag,
       const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
-    std::string text;
-    if (!creator->words().empty()) {
-      for (unsigned int i = 0; i < creator->words().size()-1; i++)
-        text += creator->words()[i] + "\n";
-      text += creator->words().back();
-    }
 
-    if (!state_creators.empty()) {
-      unsigned int size = state_creators.size();
-      for (unsigned int i = 0; i < creator->words().size(); i++) {
-        state_creators[i % size]->add_word(creator->words()[i]);
-      }
-    }
+    std::string text = buildMessage(creator->words(), '\n');
 
-    std::vector<StatePtr> states;
-    for (const auto &state_creator : state_creators) {
-      states.push_back(state_creator->create());
-    }
+    std::vector<StatePtr> states
+      = initializeStates(state_creators, creator->words());
 
     return Self::make(text, states);
   }
@@ -1275,6 +1249,36 @@ class BarDerived : public BarCrtp<BarDerived> {
  private:
   // Instance variables
   std::vector<StatePtr> _states;
+
+  // Static methods
+  static std::string buildMessage(const std::vector<std::string> &words,
+                                  char divisor) {
+    std::string text;
+    if (!words.empty()) {
+      for (unsigned int i = 0; i < words.size()-1; i++)
+        text += words[i] + divisor;
+      text += words.back();
+    }
+    return text;
+  }
+
+  static std::vector<StatePtr> initializeStates(
+      const std::vector<CreatorPtr<Target, State>> &state_creators,
+      const std::vector<std::string> &words) {
+    if (!state_creators.empty()) {
+      unsigned int size = state_creators.size();
+      for (unsigned int i = 0; i < words.size(); i++) {
+        state_creators[i % size]->add_word(words[i]);
+      }
+    }
+
+    std::vector<StatePtr> states;
+    for (const auto &state_creator : state_creators) {
+      states.push_back(state_creator->create());
+    }
+
+    return states;
+  }
 
   // Concrete methods
   void compose_accept(SimpleAcceptorPtr<BarDerived> acceptor,
