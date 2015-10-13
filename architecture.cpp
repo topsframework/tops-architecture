@@ -1184,26 +1184,38 @@ class BarDerived : public BarCrtp<BarDerived> {
 
   static SelfPtr create(
       CreatorPtr<Target, Self> creator, creator_carriage_tag,
-      const std::vector<CreatorPtr<Target, State>> &/* state_creators */ = {}) {
+      const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
     std::string text;
     if (!creator->words().empty()) {
       for (unsigned int i = 0; i < creator->words().size()-1; i++)
         text += creator->words()[i] + "\r";
       text += creator->words().back();
     }
-    return Self::make(text);
+
+    std::vector<StatePtr> states;
+    for (const auto &state_creator : state_creators) {
+      states.push_back(state_creator->create());
+    }
+
+    return Self::make(text, states);
   }
 
   static SelfPtr create(
       CreatorPtr<Target, Self> creator, creator_newline_tag,
-      const std::vector<CreatorPtr<Target, State>> &/* state_creators */ = {}) {
+      const std::vector<CreatorPtr<Target, State>> &state_creators = {}) {
     std::string text;
     if (!creator->words().empty()) {
       for (unsigned int i = 0; i < creator->words().size()-1; i++)
         text += creator->words()[i] + "\n";
       text += creator->words().back();
     }
-    return Self::make(text);
+
+    std::vector<StatePtr> states;
+    for (const auto &state_creator : state_creators) {
+      states.push_back(state_creator->create());
+    }
+
+    return Self::make(text, states);
   }
 
   // Constructors
@@ -1536,10 +1548,15 @@ int main(int /* argc */, char ** /* argv */) {
   std::cout << "Test ConcreteVisitor" << std::endl;
   std::cout << "=====================" << std::endl;
 
-  auto composite = BarDerived::make(
-    "", std::vector<BarDerivedPtr>{ BarDerived::make(), BarDerived::make() }
+  auto composite_creator = BarDerived::targetCreator(
+    creator_newline_tag{},
+    std::vector<CreatorPtr<Target, BarDerived::State>>{
+      BarDerived::targetCreator(creator_newline_tag{}),
+      BarDerived::targetCreator(creator_newline_tag{})
+    }
   );
 
+  auto composite = composite_creator->create();
   composite->acceptor(ConcreteVisitor::make())->accept();
 
   /**/ std::cout << std::endl; /*---------------------------------------------*/
