@@ -618,7 +618,7 @@ class Acceptor : public std::enable_shared_from_this<Acceptor> {
   }
 
   void post_order() {
-    accept(traversal::pre_order);
+    accept(traversal::post_order);
   }
 
   // Virtual methods
